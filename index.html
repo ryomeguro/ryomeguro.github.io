@@ -1,7 +1,46 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>HTML5でWebサイトを作ってみた</title>
+    <link rel="stylesheet" href="./css/reset.css">
+    <link rel="stylesheet" href="./css/style.css">
+</head>
 <body>
-<h1>Hello World</h1>
-<p>I'm hosted with GitHub Pages.</p>
+<header>
+    <h1 class="siteTitle">HTML5でWebサイト制作にチャレンジしました</h1>
+</header>
+<main>
+    <article>
+        <div class="section">
+            <h2 class="heading_01">HTML5を知ろう</h2>
+            <p>WebサイトにおけるHTML5の技術的役割は文書構造になります。</p>
+            <p>他にもCSSやJavaScriptという技術が使われます。</p>
+        </div>
+        <div class="section">
+            <h3 class="heading_02">WebサイトにおけるHTMLとCSS、JavaScriptの技術的役割</h3>
+            <dl class="role">
+                <dt class="bg_html">HTML</dt>
+                <dd class="bg_html_desc">文書構造</dd>
+                <dt class="bg_css">CSS</dt>
+                <dd class="bg_css_desc">視覚表現</dd>
+                <dt class="bg_js">JavaScript</dt>
+                <dd class="bg_js_desc">振る舞い</dd>
+            </dl>
+        </div>
+        <div class="section">
+            <h3 class="heading_02">HTML5にはロゴがあります</h3>
+            <figure class="mb_10">
+                <img src="./images/HTML5.png" alt="HTML5ロゴ">
+                <figcaption class="caption">HTML5のロゴ</figcaption>
+            </figure>
+            <p>ロゴのデータは<a href="http://www.w3.org/html/logo/" target="_blank">W3Cのサイト</a>からダウンロード出来ます。</p>
+            <p><a href="http://html5shirt.com/" target="_blank">HTML5のロゴが入ったTシャツも販売されている</a>ので欲しい方は買ってみてはいかがでしょうか。</p>
+        </div>
+    </article>
+</main>
+<footer>
+    <p class="copy"><small>&copy; 2015 著作権者名</small></p>
+</footer>
 </body>
 </html>
