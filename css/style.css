@@ -1,48 +1,103 @@
 @charset "utf-8";
+<style>
+@import url('https://fonts.googleapis.com/css?family=M+PLUS+1p:500|Roboto:400i&display=swap');
+</style>
+
+:root {
+  --font-color: #000;
+  --back-color: #A00;
+}
 
 html{
     font-size:62.5%;
+    --font-color: #222;
+    --back-color: #CCC;
 }
 
 body{
-    font-family: Helvetica,Arial,YuGothic,"游ゴシック体","Yu Gothic","游ゴシック","ヒラギノ角ゴ ProN","Hiragino Kaku Gothic ProN","メイリオ",Meiryo,sans-serif;
+    font-family: "Roboto","M PLUS 1p",sans-serif;
+    font-style: italic;
     font-size:1.4rem;
     line-height: 1.5;
     text-align: center;
 }
 
+h1{
+  font-size: 2.3rem;
+}
+
+h2{
+  font-size: 1.7rem;
+}
+
 p {
     font-size: 1.6rem;
+    color: var(--font-color);
 }
 
 a {
     color: #db5424;
 }
 
-.siteTitle {
-    background: #EA671A;
-    color: #FCFCE9;
-    font-size: 2.8rem;
-    padding: 35px 0;
+.profile{
+  font-style: normal;
 }
 
-.heading_01 {
-    background: #260000;
-    color: #ffffff;
-    font-size: 2.4rem;
-    margin-bottom: 30px;
-    padding: 20px 0;
+.siteTitle {
+    font-weight: normal;
+    background: var(--back-color);
+    color: var(--font-color);
+    font-size: 3.5rem;
+    padding: 35px 0;
+    margin-bottom: 20px;
 }
 
 .heading_02 {
-    border-bottom: 1px solid #db5424;
-    color: #db5424;
-    font-size: 2.0rem;
+    font-weight: normal;
+    border-bottom: 1px solid #CCCCCC;
+    color: #222222;
+    font-size: 4.0rem;
     margin-bottom: 20px;
 }
 
 .section {
     margin-bottom: 20px;
+}
+
+.description{
+  font-style: normal;
+  text-align: left;
+  max-width: 700px;
+  margin: 60px auto;
+}
+
+.workthumbnail{
+  display: inline-block;
+  position: relative;
+  background-color: #DDD;
+}
+
+.workthumbnail p{
+  position: absolute;
+  color: var(--font-color);/*文字は白に*/
+  font-size: 3rem;
+  top: 50%;
+  left: 50%;
+  -ms-transform: translate(-50%,-50%);
+  -webkit-transform: translate(-50%,-50%);
+  transform: translate(-50%,-50%);
+  margin:0;
+  padding:0;
+  opacity:0;
+}
+
+.workthumbnail img{
+  width: 500px;
+  transition: 0.5;
+}
+
+.twitterIcon{
+  width: 200px;
 }
 
 .mb_10 {
@@ -101,7 +156,7 @@ a {
 }
 
 .copy {
-    background: #EA671A;
+    background: var(--back-color);
     color: #ffffff;
     font-size: 1.6rem;
     padding: 10px 0;

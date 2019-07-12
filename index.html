@@ -2,45 +2,52 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>HTML5でWebサイトを作ってみた</title>
+    <title>Meguro Ryo Portfolio Site</title>
     <link rel="stylesheet" href="./css/reset.css">
     <link rel="stylesheet" href="./css/style.css">
+    <script src="./js/jquery-2.2.1.min.js"></script>
+    <script src="./js/thumbnail.js"></script>
 </head>
 <body>
 <header>
-    <h1 class="siteTitle">HTML5でWebサイト制作にチャレンジしました</h1>
+    <h1 class="siteTitle">Meguro Ryo Portfolio Site</h1>
 </header>
 <main>
     <article>
         <div class="section">
-            <h2 class="heading_01">HTML5を知ろう</h2>
-            <p>WebサイトにおけるHTML5の技術的役割は文書構造になります。</p>
-            <p>他にもCSSやJavaScriptという技術が使われます。</p>
+            <h3 class="heading_02">WORKS</h3>
+            <a href="workHTML/karugamo.html">
+              <div class="workthumbnail">
+                <img src="./images/karugamo.png" alt="marble">
+                <p>カルガモ大行列</p>
+              </div>
+            </a>
+            <a href="workHTML/komezanmai.html">
+              <div class="workthumbnail">
+                <img src="./images/kome.png" alt="marble">
+                <p>※こめざんまい※</p>
+              </div>
+            </a>
         </div>
         <div class="section">
-            <h3 class="heading_02">WebサイトにおけるHTMLとCSS、JavaScriptの技術的役割</h3>
-            <dl class="role">
-                <dt class="bg_html">HTML</dt>
-                <dd class="bg_html_desc">文書構造</dd>
-                <dt class="bg_css">CSS</dt>
-                <dd class="bg_css_desc">視覚表現</dd>
-                <dt class="bg_js">JavaScript</dt>
-                <dd class="bg_js_desc">振る舞い</dd>
-            </dl>
-        </div>
-        <div class="section">
-            <h3 class="heading_02">HTML5にはロゴがあります</h3>
+            <h3 class="heading_02">PROFILE</h3>
             <figure class="mb_10">
-                <img src="./images/HTML5.png" alt="HTML5ロゴ">
-                <figcaption class="caption">HTML5のロゴ</figcaption>
+                <a href="https://twitter.com/Hello_Donchan">
+                  <img class="twitterIcon" src="./images/twitterIcon.jpg" alt="icon">
+                </a>
+                <figcaption class="caption">Twitter @Hello_Donchan</figcaption>
             </figure>
-            <p>ロゴのデータは<a href="http://www.w3.org/html/logo/" target="_blank">W3Cのサイト</a>からダウンロード出来ます。</p>
-            <p><a href="http://html5shirt.com/" target="_blank">HTML5のロゴが入ったTシャツも販売されている</a>ので欲しい方は買ってみてはいかがでしょうか。</p>
+            <div class="profile">
+              <h1>目黒 僚(めぐろ りょう)</h1>
+              <p>大阪大学大学院 情報科学研究科</p>
+              <p>情報システム工学専攻 竹村研究室 修士1年</p>
+              <p>趣味でゲームや3DCGイラスト,GIFなどをつくっています。</p>
+            </div>
         </div>
     </article>
 </main>
 <footer>
-    <p class="copy"><small>&copy; 2015 著作権者名</small></p>
+    <p class="copy"><small>Meguro Ryo (Last updated 2019/07/12)</small></p>
 </footer>
 </body>
 </html>
