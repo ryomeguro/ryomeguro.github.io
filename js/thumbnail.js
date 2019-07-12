@@ -1,3 +1,4 @@
+if(!navigator.userAgent.match(/(iPhone|Android)/)){
 $(function(){
     //サムネイル画像をクリックした時の処理
     $('.workthumbnail').hover(function(){
@@ -15,3 +16,4 @@ $(function(){
     });
 
 });
+}
