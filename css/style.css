@@ -1,42 +1,18 @@
 @charset "utf-8";
-<style>
 @import url('https://fonts.googleapis.com/css?family=M+PLUS+1p:500|Roboto:400i&display=swap');
-</style>
 
 :root {
   --font-color: #000;
-  --back-color: #A00;
+  --back-color: #000;
 }
 
 html{
-    font-size:62.5%;
     --font-color: #222;
     --back-color: #CCC;
 }
 
-body{
-    font-family: "Roboto","M PLUS 1p",sans-serif;
-    font-style: italic;
-    font-size:1.4rem;
-    line-height: 1.5;
-    text-align: center;
-}
-
-h1{
-  font-size: 2.3rem;
-}
-
-h2{
-  font-size: 1.7rem;
-}
-
-p {
-    font-size: 1.6rem;
-    color: var(--font-color);
-}
-
-a {
-    color: #db5424;
+.container h1{
+  text-align: center;
 }
 
 .profile{
@@ -160,4 +136,14 @@ a {
     color: #ffffff;
     font-size: 1.6rem;
     padding: 10px 0;
+}
+
+#defaultCanvas0{
+  display: block;
+}
+
+@media only screen and (max-width: 992px){
+  #defaultCanvas0{
+    display: none;
+  }
 }
