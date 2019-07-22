@@ -5,49 +5,94 @@ var nums =200;
 var noiseScale = 800;
 var canvas;
 
-function windowResized(){
-	resizeCanvas(windowWidth, windowHeight);
+function canvasSetup(){
+	background(233, 233, 233);
+	for(var i = 0; i < nums; i++){
+		particles_a[i] = new Particle(random(0, width),random(0,height));
+		particles_b[i] = new Particle(random(0, width),random(0,height));
+		particles_c[i] = new Particle(random(0, width),random(0,height));
+	}
 }
 
-var phase, speed, maxCircleSize, numRows, numCols, numStrands, colorA, colorB;
+function windowResized(){
+	//resizeCanvas(windowWidth, windowHeight);
+	resizeCanvas(document.documentElement.scrollWidth,document.documentElement.scrollHeight);
+	canvasSetup();
+}
 
+//固定する場合
+/*
+css: position: fixed
+	top : 0
+
+js: createCanvas(windowWidth, windowHeight)
+positionはなし
+*/
+
+//固定しない場合
+/*
+css: 特になし
+
+js: createCanvas(document.documentElement.scrollWidth,document.documentElement.scrollHeight)
+position(0,0)
+*/
 function setup() {
-	canvas = createCanvas(windowWidth, windowHeight);
+	//canvas = createCanvas(windowWidth, windowHeight);
+	canvas = createCanvas(document.documentElement.scrollWidth,document.documentElement.scrollHeight);
 	canvas.position(0,0);
 	canvas.style('z-index','-1');
 
-  noStroke();
-
-  phase = 0;
-  speed = 0.03;
-  maxCircleSize = 20;
-  numRows = 10;
-  numCols = 16;
-  numStrands = 2;
-
-  colorA = color(253, 174, 120);
-  colorB = color(226, 129, 161);
+	canvasSetup();
 }
 
-function draw() {
-  background(200, 200, 200);
-  phase = frameCount * speed;
+function draw(){
+	noStroke();
+	smooth();
+		for(var i = 0; i < nums; i++){
+		var radius = map(i,0,nums,1,2);
+		var alpha = map(i,0,nums,0,250);
 
-  for(var strand = 0; strand < numStrands; strand += 1) {
-    var strandPhase = phase + map(strand, 0, numStrands, 0, TWO_PI);
+		fill(69,33,124,alpha);
+		particles_a[i].move();
+		particles_a[i].display(radius);
+		particles_a[i].checkEdge();
 
-    for(var col = 0; col < numCols; col += 1) {
-      var colOffset = map(col, 0, numCols, 0, TWO_PI);
-      var x = map(col, 0, numCols, 50, width - 50);
+		fill(7,153,242,alpha);
+		particles_b[i].move();
+		particles_b[i].display(radius);
+		particles_b[i].checkEdge();
 
-      for(var row = 0; row < numRows; row += 1) {
-        var y = height/2 + row * 10 + sin(strandPhase + colOffset) * 50;
-        var sizeOffset = (cos(strandPhase - (row / numRows) + colOffset) + 1) * 0.5;
-        var circleSize = sizeOffset * maxCircleSize;
+		fill(255,255,255,alpha);
+		particles_c[i].move();
+		particles_c[i].display(radius);
+		particles_c[i].checkEdge();
+	}
+}
 
-        fill(lerpColor(colorA, colorB, row / numRows));
-        ellipse(x, y, circleSize, circleSize);
-      }
-    }
-  }
+
+function Particle(x, y){
+	this.dir = createVector(0, 0);
+	this.vel = createVector(0, 0);
+	this.pos = createVector(x, y);
+	this.speed = 0.4;
+
+	this.move = function(){
+		var angle = noise(this.pos.x/noiseScale, this.pos.y/noiseScale)*TWO_PI*noiseScale;
+		this.dir.x = cos(angle);
+		this.dir.y = sin(angle);
+		this.vel = this.dir.copy();
+		this.vel.mult(this.speed);
+		this.pos.add(this.vel);
+	}
+
+	this.checkEdge = function(){
+		if(this.pos.x > width || this.pos.x < 0 || this.pos.y > height || this.pos.y < 0){
+			this.pos.x = random(50, width);
+			this.pos.y = random(50, height);
+		}
+	}
+
+	this.display = function(r){
+		ellipse(this.pos.x, this.pos.y, r, r);
+	}
 }
