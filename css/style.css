@@ -1,46 +1,46 @@
 @charset "utf-8";
-<style>
 @import url('https://fonts.googleapis.com/css?family=M+PLUS+1p:500|Roboto:400i&display=swap');
-</style>
 
 :root {
   --font-color: #000;
-  --back-color: #A00;
+  --back-color: #000;
 }
 
 html{
-    font-size:62.5%;
     --font-color: #222;
     --back-color: #CCC;
 }
 
 body{
-    font-family: "Roboto","M PLUS 1p",sans-serif;
-    font-style: italic;
-    font-size:1.4rem;
-    line-height: 1.5;
-    text-align: center;
+  background-color: #EEE;
 }
 
-h1{
-  font-size: 2.3rem;
+dt{
+  background-color: #AAA;
+  border-radius: 7px 7px 0 0;
 }
 
-h2{
-  font-size: 1.7rem;
+dd{
+  background-color: #E0E0E0;
+  margin: 0;
+  border-radius: 0 0 7px 7px;
 }
 
-p {
-    font-size: 1.6rem;
-    color: var(--font-color);
+hr{
+  border: 1px solid hsl(0, 0%, 60%);
 }
 
-a {
-    color: #db5424;
+.container h1{
+  text-align: center;
+  //color: #CCC;
+}
+.container h2{
+  text-align: center;
+  //color: #CCC;
 }
 
-.profile{
-  font-style: normal;
+.profile span{
+  margin: 1px;
 }
 
 .siteTitle {
@@ -75,6 +75,9 @@ a {
   display: inline-block;
   position: relative;
   background-color: #DDD;
+  margin: 10px;
+  border-radius: 5px;
+  max-width: 500px;
 }
 
 .workthumbnail p{
@@ -89,75 +92,38 @@ a {
   margin:0;
   padding:0;
   opacity:0;
+  width: 100%;
 }
 
 .workthumbnail img{
-  width: 500px;
+  border-radius: 5px;
   transition: 0.5;
+  width: 100%;
 }
 
-.twitterIcon{
-  width: 200px;
+.CGgarally{
+  display: inline-block;
+  margin: 10px;
 }
 
-.mb_10 {
-    margin-bottom: 10px;
+.CGgarally img{
+  height: 300px;
+  border-radius: 5px;
 }
 
-.bg_html {
-    background: #E65127;
+#twitterthumb{
+  max-width: 200px;
+  margin: 20px auto;
 }
 
-.bg_html_desc {
-    background: #F4825D;
+#defaultCanvas0{
+  //display: block;
+  //position: fixed;
+  //top: 0;
 }
 
-.bg_css {
-    background: #0C73B8;
-}
-
-.bg_css_desc {
-    background: #30AADD;
-}
-
-.bg_js {
-    background: #EBA32A;
-}
-
-.bg_js_desc {
-    background: #F2BF26;
-}
-
-.role {
-    color: #ffffff;
-    font-size: 1.8rem;
-    margin: 0 auto;
-    width: 300px;
-}
-
-.role * {
-    padding: 10px;
-}
-
-.role dt {
-    border-top-left-radius: 10px;
-    border-top-right-radius: 10px;
-}
-
-.role dd {
-    border-bottom-left-radius: 10px;
-    border-bottom-right-radius: 10px;
-    margin-bottom: 10px;
-}
-
-.caption {
-    color: #db5424;
-    font-size: 1.2rem;
-}
-
-.copy {
-    background: var(--back-color);
-    color: #ffffff;
-    font-size: 1.6rem;
-    padding: 10px 0;
+@media only screen and (max-width: 992px){
+  #defaultCanvas0{
+    display: none;
+  }
 }

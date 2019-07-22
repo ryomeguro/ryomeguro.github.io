@@ -1,53 +1,101 @@
 <!doctype html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <title>Meguro Ryo Portfolio Site</title>
-    <link rel="stylesheet" href="./css/reset.css">
-    <link rel="stylesheet" href="./css/style.css">
-    <script src="./js/jquery-2.2.1.min.js"></script>
-    <script src="./js/thumbnail.js"></script>
+  <meta charset="UTF-8">
+  <title>Meguro Ryo Portfolio Site</title>
+
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+  <link rel="stylesheet" href="css/style.css">
+
+  <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+  <script src="./js/thumbnail.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 </head>
 <body>
-<header>
-    <h1 class="siteTitle">Meguro Ryo Portfolio Site</h1>
-</header>
-<main>
-    <article>
-        <div class="section">
-            <h3 class="heading_02">WORKS</h3>
-            <a href="workHTML/karugamo.html">
-              <div class="workthumbnail">
-                <img src="./images/karugamo.png" alt="marble">
-                <p>カルガモ大行列</p>
-              </div>
-            </a>
-            <a href="workHTML/komezanmai.html">
-              <div class="workthumbnail">
-                <img src="./images/kome.png" alt="marble">
-                <p>※こめざんまい※</p>
-              </div>
-            </a>
+  <nav class="navbar navbar-fixed-top navbar-expand-sm navbar-dark bg-dark mt-0 mb-3 sticky-top">
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav4" aria-controls="navbarNav4" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <a class="navbar-brand" href="index.html">Meguro Ryo Portfolio Site</a>
+    <div class="collapse navbar-collapse">
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a class="nav-link" href="#profile">PROFILE</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#works">WORKS</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <section class="container mb-3" id="profile">
+    <h1>PROFILE</h1>
+    <hr>
+    <img src="images/twitterIcon.jpg" class="rounded mx-auto d-block" id="twitterthumb">
+
+    <div class="row">
+      <div class="col-sm-4 offset-sm-4">
+        <dl class="text-center profile">
+          <span><dt>名前</dt><dd>目黒 僚(めぐろ りょう)</dd></span>
+          <span><dt>所属</dt><dd>大阪大学大学院情報科学研究科<br>情報システム工学専攻竹村研究室</dd></span>
+          <span><dt>趣味</dt><dd>ゲーム制作<br>3DCG<br>爬虫類飼育</dd></span>
+          <span>
+            <dt>SNS等</dt>
+            <dd>
+              <a href="https://qiita.com/ryomeguro">Qiita</a><br>
+              <a href="https://twitter.com/Hello_Donchan?ref_src=twsrc%5Etfw" class="twitter-follow-button" data-show-count="false">Follow @Hello_Donchan</a><script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+            </dd>
+          </dl>
         </div>
-        <div class="section">
-            <h3 class="heading_02">PROFILE</h3>
-            <figure class="mb_10">
-                <a href="https://twitter.com/Hello_Donchan">
-                  <img class="twitterIcon" src="./images/twitterIcon.jpg" alt="icon">
-                </a>
-                <figcaption class="caption">Twitter @Hello_Donchan</figcaption>
-            </figure>
-            <div class="profile">
-              <h1>目黒 僚(めぐろ りょう)</h1>
-              <p>大阪大学大学院 情報科学研究科</p>
-              <p>情報システム工学専攻 竹村研究室 修士1年</p>
-              <p>趣味でゲームや3DCGイラスト,GIFなどをつくっています。</p>
-            </div>
+      </div>
+    </section>
+
+    <section class="container" id="works">
+      <h1>WORKS</h1>
+      <hr>
+
+      <div class="mb-3">
+        <h2>GAME</h2>
+        <div style="text-align: center;">
+          <div class="workthumbnail">
+            <a href="game.html?game=karugamo">
+              <img src="./images/game/karugamo.png" alt="marble">
+              <p>カルガモ大行列</p>
+            </a>
+          </div>
+          <div class="workthumbnail">
+            <a href="game.html?game=kome">
+              <img src="./images/game/kome.png" alt="marble">
+              <p>※こめざんまい※</p>
+            </a>
+          </div>
         </div>
-    </article>
-</main>
-<footer>
-    <p class="copy"><small>Meguro Ryo (Last updated 2019/07/12)</small></p>
-</footer>
+      </div>
+
+      <div class="mb-3">
+        <h2>3DCG</h2>
+        <div id="CGgarally" class="text-center">
+          <div class="CGgarally" v-for="Photo in Photos">
+            <img :src="Photo.path">
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+
+  <script src="js/garally.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.9.0/p5.min.js" integrity="sha256-WVsM3xrcqyuFNF3W1qtIKbHFsD0977nDQA8DCMp1zCw=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.9.0/addons/p5.dom.min.js" integrity="sha256-2/3R3NV5zryj0fDjD3cDh+SNiWQ/TJiMVZzAo5FrhiU=" crossorigin="anonymous"></script>
+  <script src="js/sketch2.js"></script>
+
 </body>
 </html>
