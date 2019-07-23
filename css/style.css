@@ -107,7 +107,8 @@ hr{
 }
 
 .CGgarally img{
-  height: 300px;
+  max-height: 300px;
+  max-width: 100%;
   border-radius: 5px;
 }
 
@@ -116,14 +117,16 @@ hr{
   margin: 20px auto;
 }
 
+/*
 #defaultCanvas0{
-  //display: block;
-  //position: fixed;
-  //top: 0;
+  display: block;
+  position: fixed;
+  top: 0;
 }
+*/
 
 @media only screen and (max-width: 992px){
   #defaultCanvas0{
-    display: none;
+    //display: none;
   }
 }
