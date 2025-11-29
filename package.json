@@ -21,9 +21,13 @@
   },
   "homepage": "https://github.com/ryomeguro/ryomeguro.github.io#readme",
   "devDependencies": {
+    "@types/gl-matrix": "^2.4.5",
     "@types/node": "^24.10.1",
     "@webgpu/types": "^0.1.66",
     "typescript": "^5.9.3",
     "vite": "^7.2.4"
+  },
+  "dependencies": {
+    "gl-matrix": "^3.4.4"
   }
 }
