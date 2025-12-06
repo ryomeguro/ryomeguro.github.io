@@ -2,9 +2,6 @@ import shaderCode from './shader.wgsl?raw';
 import { mat4 } from 'gl-matrix';
 
 const init = async () => {
-    /*
-     * WebGPUの初期化
-     */
     if (!navigator.gpu) throw new Error('WebGPU not supported');
     const adapter = await navigator.gpu.requestAdapter();
     if (!adapter) throw new Error('No adapter');
@@ -14,9 +11,7 @@ const init = async () => {
     const format = navigator.gpu.getPreferredCanvasFormat();
     context.configure({ device, format, alphaMode: 'premultiplied' });
 
-    /*
-     * Cubeのデータ定義
-     */
+    // Cube data
     const vertices = new Float32Array([
         // position (3), color (3)
         // Front face
@@ -72,22 +67,16 @@ const init = async () => {
     });
     device.queue.writeBuffer(indexBuffer, 0, indices);
 
-    // matrixを渡すUBOを入れるバッファ
     const uniformBuffer = device.createBuffer({
         size: 64, // 4x4 matrix
         usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     });
 
-    /*
-     * シェーダモジュールの作成
-     */
+
     const shaderModule = device.createShaderModule({
         code: shaderCode,
     });
 
-    /*
-     * レンダリングパイプラインの作成
-     */
     const pipeline = device.createRenderPipeline({
         layout: 'auto',
         vertex: {
@@ -96,8 +85,8 @@ const init = async () => {
             buffers: [{
                 arrayStride: 24,
                 attributes: [
-                    { shaderLocation: 0, offset: 0, format: 'float32x3' },  // position
-                    { shaderLocation: 1, offset: 12, format: 'float32x3' }, // color offset = 4(float32) * 3(position)
+                    { shaderLocation: 0, offset: 0, format: 'float32x3' },
+                    { shaderLocation: 1, offset: 12, format: 'float32x3' },
                 ],
             }],
         },
@@ -113,25 +102,21 @@ const init = async () => {
         depthStencil: {
             depthWriteEnabled: true,
             depthCompare: 'less',
-            format: 'depth24plus',  // ハードウェアに応じて24ビット以上になるデプスフォーマット
+            format: 'depth24plus',
         },
     });
 
-    // デプステクスチャを作成
     const depthTexture = device.createTexture({
         size: [canvas.width, canvas.height],
         format: 'depth24plus',
         usage: GPUTextureUsage.RENDER_ATTACHMENT,
     });
 
-    // バインドグループを作成
-    // シェーダーのスロットとリソースをバインドする
     const bindGroup = device.createBindGroup({
         layout: pipeline.getBindGroupLayout(0),
-        entries: [{ binding: 0, resource: { buffer: uniformBuffer } }], // シェーダーの0番目のスロットにuniformBufferをバインド
+        entries: [{ binding: 0, resource: { buffer: uniformBuffer } }],
     });
 
-    // モデルビュー射影行列を作成する
     const projectionMatrix = mat4.create();
     const viewMatrix = mat4.create();
     const modelMatrix = mat4.create();
@@ -165,10 +150,8 @@ const init = async () => {
         mat4.multiply(temp, viewMatrix, modelMatrix);
         mat4.multiply(mvpMatrix, projectionMatrix, temp);
 
-        // MVP行列をGPUに送る
         device.queue.writeBuffer(uniformBuffer, 0, new Float32Array(mvpMatrix));
 
-        // 描画準備
         const commandEncoder = device.createCommandEncoder();
         const textureView = context.getCurrentTexture().createView();
 
@@ -194,13 +177,7 @@ const init = async () => {
         renderPass.drawIndexed(36);
         renderPass.end();
 
-        // 描画実行
         device.queue.submit([commandEncoder.finish()]);
-
-        // requestAnimationFrameとはブラウザが提供するWeb APIの一つ
-        // 次の描画タイミングに合わせて指定した関数を実行する
-        // 再帰関数にすることで無限ループで毎フレーム描画を繰り返す
-        // requestAnimationFrameは関数を非同期的にスケジュールするため、スタックオーバーフローは心配ない
         requestAnimationFrame(frame);
     }
 
