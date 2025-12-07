@@ -154,8 +154,29 @@ const init = async () => {
     const settings = {
         speed: 1.0,
     };
-    const gui = new dat.GUI();
+    const gui = new dat.GUI({ autoPlace: false });
     gui.add(settings, 'speed', 0.0, 5.0).name('Rotation Speed');
+
+    // Append GUI to sample controls
+    const controlsContainer = document.querySelector('.sample-controls');
+    if (controlsContainer) {
+        controlsContainer.appendChild(gui.domElement);
+    } else {
+        // Fallback or create if not exists (though navigation.ts should have created it)
+        const header = document.querySelector('.sample-header');
+        if (header) {
+            const controls = document.createElement('div');
+            controls.className = 'sample-controls';
+            header.appendChild(controls);
+            controls.appendChild(gui.domElement);
+        } else {
+            // Absolute fallback if no header
+            document.body.appendChild(gui.domElement);
+            gui.domElement.style.position = 'absolute';
+            gui.domElement.style.top = '10px';
+            gui.domElement.style.right = '10px';
+        }
+    }
 
     let previousTime = Date.now() / 1000;
     let currentAngle = previousTime; // Start with current time to match previous behavior roughly, or 0

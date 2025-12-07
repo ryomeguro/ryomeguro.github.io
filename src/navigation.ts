@@ -31,14 +31,24 @@ export function initNavigation() {
             if (canvasContainer) {
                 console.log('[Navigation] Canvas container found');
 
-                // 1. Create GitHub source link at top-right
-                if (!canvasContainer.querySelector('.source-link')) {
-                    const link = document.createElement('a');
-                    link.href = `https://github.com/ryomeguro/ryomeguro.github.io/tree/master/src/samples/${sampleName}`;
-                    link.className = 'source-link';
-                    link.textContent = 'View Source on GitHub';
-                    link.target = '_blank';
-                    canvasContainer.appendChild(link);
+                // 1. Create GitHub source link in the controls area
+                const header = canvasContainer.querySelector('.sample-header');
+                if (header) {
+                    let controls = header.querySelector('.sample-controls');
+                    if (!controls) {
+                        controls = document.createElement('div');
+                        controls.className = 'sample-controls';
+                        header.appendChild(controls);
+                    }
+
+                    if (!controls.querySelector('.source-link')) {
+                        const link = document.createElement('a');
+                        link.href = `https://github.com/ryomeguro/ryomeguro.github.io/tree/master/src/samples/${sampleName}`;
+                        link.className = 'source-link';
+                        link.textContent = 'View Source on GitHub';
+                        link.target = '_blank';
+                        controls.appendChild(link);
+                    }
                 }
 
                 // 2. Initialize persistent SourceViewer at bottom
