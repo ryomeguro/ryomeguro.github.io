@@ -15,6 +15,22 @@ export function initNavigation() {
             <li><a href="/src/samples/03_twocube/index.html">Draw Two Cubes</a></li>
         </ul>
     `;
+
+    // Check if we are on a sample page and inject source link
+    const path = window.location.pathname;
+    const match = path.match(/\/src\/samples\/([^/]+)\//);
+    if (match && match[1]) {
+        const sampleName = match[1];
+        const canvasContainer = document.querySelector('#canvas-container');
+        if (canvasContainer) {
+            const link = document.createElement('a');
+            link.href = `https://github.com/ryomeguro/ryomeguro.github.io/tree/master/src/samples/${sampleName}`;
+            link.className = 'source-link';
+            link.textContent = 'View Source on GitHub';
+            link.target = '_blank';
+            canvasContainer.appendChild(link);
+        }
+    }
 }
 
 initNavigation();
