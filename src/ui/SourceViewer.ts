@@ -1,6 +1,7 @@
 import { EditorView, basicSetup } from "codemirror";
-import { EditorState } from "@codemirror/state";
+import { EditorState, Compartment } from "@codemirror/state";
 import { javascript } from "@codemirror/lang-javascript";
+import { rust } from "@codemirror/lang-rust";
 import { oneDark } from "@codemirror/theme-one-dark";
 import { SourceFile } from "../sourceLoader";
 
@@ -10,6 +11,7 @@ export class SourceViewer {
     private currentFileIndex: number = 0;
     private sources: SourceFile[] = [];
     private tabContainer: HTMLElement;
+    private languageCompartment = new Compartment();
 
     constructor(parentId: string) {
         const parent = document.getElementById(parentId);
@@ -36,7 +38,7 @@ export class SourceViewer {
             parent: editorContainer,
             extensions: [
                 basicSetup,
-                javascript(),
+                this.languageCompartment.of(javascript()), // Default
                 oneDark,
                 EditorView.lineWrapping,
                 EditorState.readOnly.of(true)
@@ -69,14 +71,20 @@ export class SourceViewer {
     private updateContent() {
         if (!this.editorView || this.sources.length === 0) return;
 
-        const content = this.sources[this.currentFileIndex].content;
+        const source = this.sources[this.currentFileIndex];
+        const content = source.content;
+
+        // Determine Mode
+        const isWgsl = source.name.endsWith('.wgsl');
+        const languageExtension = isWgsl ? rust() : javascript();
 
         this.editorView.dispatch({
             changes: {
                 from: 0,
                 to: this.editorView.state.doc.length,
                 insert: content
-            }
+            },
+            effects: this.languageCompartment.reconfigure(languageExtension)
         });
     }
 }
