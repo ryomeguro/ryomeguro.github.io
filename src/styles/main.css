@@ -69,20 +69,20 @@ body {
 
 .sample-header {
   position: relative;
-  /* Context for absolute positioning of controls */
   text-align: left;
   margin-bottom: 0;
-  /* Removing margin so canvas sits tight against header (controls will overlay) */
   color: #fff;
-  padding-top: 20px;
-  padding-left: 20px;
-  padding-right: 20px;
-  padding-bottom: 20px;
-  /* Add bottom padding for the text */
+  padding: 0 20px;
+  /* Zero vertical padding, 20px horizontal */
   width: 100%;
   box-sizing: border-box;
   z-index: 60;
-  /* Above canvas */
+}
+
+.sample-header h1,
+.sample-header p {
+  margin: 0;
+  /* Remove default margins to minimize vertical space */
 }
 
 .sample-controls {
@@ -91,21 +91,16 @@ body {
   left: 0;
   right: 0;
   padding: 0 20px;
-  /* Match header padding */
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  /* Align top */
   pointer-events: none;
-  /* Let clicks pass through control area */
   margin-top: 10px;
-  /* Offset slightly into the canvas area */
   transform: translateY(0);
 }
 
 .sample-controls>* {
   pointer-events: auto;
-  /* Re-enable clicks on buttons/gui */
 }
 
 canvas {
