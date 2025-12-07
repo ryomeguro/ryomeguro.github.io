@@ -23,6 +23,8 @@ const init = async () => {
 
     // HTMLCanvasElementを取得します。
     const canvas = document.querySelector('#webgpu-canvas') as HTMLCanvasElement;
+    canvas.width = 1280;
+    canvas.height = 720;
     // HTMLCanvasElementからWebGPUコンテキストを取得します。
     // @memo 他にも2DコンテキストやWebGLコンテキストなどが存在する
     const context = canvas.getContext('webgpu');

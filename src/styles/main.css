@@ -12,8 +12,10 @@ body {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   background-color: var(--bg-color);
   color: var(--text-color);
-  height: 100vh;
+  min-height: 100vh;
   display: flex;
+  overflow: auto;
+  /* Allow scrolling */
 }
 
 #sidebar {
@@ -23,6 +25,11 @@ body {
   box-sizing: border-box;
   border-right: 1px solid #333;
   overflow-y: auto;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  flex-shrink: 0;
+  /* Prevent sidebar from shrinking */
 }
 
 #sidebar h2 {
@@ -55,17 +62,15 @@ body {
   display: flex !important;
   flex-direction: column !important;
   position: relative;
-  overflow: hidden;
   background-color: #111;
+  min-width: 1280px;
+  align-items: center;
 }
 
 canvas {
-  flex: 1 !important;
-  /* Grow and shrink */
-  height: auto !important;
-  /* Allow shrinking below content size */
-  min-height: 0 !important;
-  width: 100%;
+  flex: 0 0 auto !important;
+  width: 1280px !important;
+  height: 720px !important;
   object-fit: contain;
   box-shadow: none;
   margin: 0 !important;
@@ -74,16 +79,15 @@ canvas {
 
 /* Source Viewer */
 #source-viewer {
-  height: 40%;
-  /* Initial height */
+  height: 500px !important;
+  width: 100%;
   background-color: #282c34;
   display: flex !important;
   flex-direction: column !important;
   z-index: 50;
   box-sizing: border-box;
+  flex-shrink: 0;
 }
-
-
 
 .source-tabs {
   display: flex;

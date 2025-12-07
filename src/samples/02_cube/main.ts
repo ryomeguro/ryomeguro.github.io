@@ -10,6 +10,8 @@ const init = async () => {
     if (!adapter) throw new Error('No adapter');
     const device = await adapter.requestDevice();
     const canvas = document.querySelector('#webgpu-canvas') as HTMLCanvasElement;
+    canvas.width = 1280;
+    canvas.height = 720;
     const context = canvas.getContext('webgpu')!;
     const format = navigator.gpu.getPreferredCanvasFormat();
     context.configure({ device, format, alphaMode: 'premultiplied' });
