@@ -32,7 +32,6 @@ export function initNavigation() {
                 console.log('[Navigation] Canvas container found');
 
                 // 1. Create GitHub source link at top-right
-                // Check if link already exists to avoid dupes if called multiple times
                 if (!canvasContainer.querySelector('.source-link')) {
                     const link = document.createElement('a');
                     link.href = `https://github.com/ryomeguro/ryomeguro.github.io/tree/master/src/samples/${sampleName}`;
@@ -43,8 +42,13 @@ export function initNavigation() {
                 }
 
                 // 2. Initialize persistent SourceViewer at bottom
-                // Check if viewer already exists
                 if (!document.getElementById('source-viewer')) {
+
+                    // Create Resizer
+                    const resizer = document.createElement('div');
+                    resizer.className = 'resizer';
+                    canvasContainer.appendChild(resizer);
+
                     import('./ui/SourceViewer').then(({ SourceViewer }) => {
                         console.log('[Navigation] SourceViewer imported');
                         import('./sourceLoader').then(({ getSampleSources }) => {
@@ -53,6 +57,45 @@ export function initNavigation() {
 
                             const viewer = new SourceViewer('canvas-container');
                             viewer.setSources(sources);
+
+                            // Resizer Logic
+                            let isDragging = false;
+                            let startY: number;
+                            let startHeight: number;
+
+                            const viewerEl = document.getElementById('source-viewer');
+
+                            resizer.addEventListener('mousedown', (e) => {
+                                isDragging = true;
+                                startY = e.clientY;
+                                if (viewerEl) {
+                                    startHeight = viewerEl.clientHeight;
+                                    resizer.classList.add('dragging');
+                                    document.body.style.cursor = 'row-resize';
+                                    document.body.style.userSelect = 'none';
+                                }
+                            });
+
+                            document.addEventListener('mousemove', (e) => {
+                                if (!isDragging || !viewerEl) return;
+                                const deltaY = startY - e.clientY; // Drag up increases height
+                                const newHeight = startHeight + deltaY;
+                                // Clamp height (min 100px, max 80% of window)
+                                const maxHeight = window.innerHeight * 0.8;
+                                const clampedHeight = Math.max(100, Math.min(newHeight, maxHeight));
+
+                                viewerEl.style.height = `${clampedHeight}px`;
+                            });
+
+                            document.addEventListener('mouseup', () => {
+                                if (isDragging) {
+                                    isDragging = false;
+                                    resizer.classList.remove('dragging');
+                                    document.body.style.cursor = '';
+                                    document.body.style.userSelect = '';
+                                }
+                            });
+
                         }).catch(e => console.error('[Navigation] Error loading sources:', e));
                     }).catch(e => console.error('[Navigation] Error importing SourceViewer:', e));
                 }

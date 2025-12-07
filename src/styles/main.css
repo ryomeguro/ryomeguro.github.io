@@ -60,7 +60,7 @@ body {
 }
 
 canvas {
-  flex: 1 1 auto !important;
+  flex: 1 !important;
   /* Grow and shrink */
   height: auto !important;
   /* Allow shrinking below content size */
@@ -74,16 +74,33 @@ canvas {
 
 /* Source Viewer */
 #source-viewer {
-  flex: 0 0 40% !important;
-  /* Strictly 40% */
-  height: 40% !important;
+  height: 40%;
+  /* Initial height */
   background-color: #282c34;
   display: flex !important;
   flex-direction: column !important;
   z-index: 50;
-  /* Ensure on top */
-  border-top: 1px solid #444;
   box-sizing: border-box;
+}
+
+/* Resizer Handle */
+.resizer {
+  width: 100%;
+  height: 8px;
+  background-color: #333;
+  cursor: row-resize;
+  border-top: 1px solid #444;
+  border-bottom: 1px solid #222;
+  transition: background-color 0.2s;
+  z-index: 60;
+  /* Above viewer */
+  flex-shrink: 0;
+}
+
+.resizer:hover,
+.resizer.dragging {
+  background-color: #646cff;
+  /* Accent color on hover/drag */
 }
 
 .source-tabs {
