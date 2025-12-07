@@ -11,6 +11,7 @@ export function initNavigation() {
         <ul>
             <li><a href="/src/samples/01_triangle/index.html">Draw Single Triangle</a></li>
             <li><a href="/src/samples/02_cube/index.html">Draw Cube</a></li>
+            <li><a href="/src/samples/03_twocube/index.html">Draw Two Cubes</a></li>
         </ul>
     `;
 }

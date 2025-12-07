@@ -1,5 +1,5 @@
 import shaderCode from './shader.wgsl?raw';
-import { mat4 } from 'gl-matrix';
+import { mat4, quat } from 'gl-matrix';
 
 const init = async () => {
     if (!navigator.gpu) throw new Error('WebGPU not supported');
@@ -67,12 +67,6 @@ const init = async () => {
     });
     device.queue.writeBuffer(indexBuffer, 0, indices);
 
-    const uniformBuffer = device.createBuffer({
-        size: 64, // 4x4 matrix
-        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-    });
-
-
     const shaderModule = device.createShaderModule({
         code: shaderCode,
     });
@@ -112,15 +106,33 @@ const init = async () => {
         usage: GPUTextureUsage.RENDER_ATTACHMENT,
     });
 
-    const bindGroup = device.createBindGroup({
+    const matrixSize = 4 * 16; // 4x4 matrix
+    const offset = 256; // uniformBindGroup offset must be 256-byte aligned
+    const uniformBufferSize = offset + matrixSize;
+
+    // 今回はモデルが2つあるのでこのuniformBufferにUBOを2つ確保する
+    const uniformBuffer = device.createBuffer({
+        size: uniformBufferSize,
+        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+    });
+
+    // sizeを省略した場合、バッファ全体を参照するため、今回はsizeを指定する必要がある
+    const bindGroup0 = device.createBindGroup({
         layout: pipeline.getBindGroupLayout(0),
-        entries: [{ binding: 0, resource: { buffer: uniformBuffer } }],
+        entries: [{ binding: 0, resource: { buffer: uniformBuffer, size: matrixSize, offset: 0 } }],
+    });
+
+    const bindGroup1 = device.createBindGroup({
+        layout: pipeline.getBindGroupLayout(0),
+        entries: [{ binding: 0, resource: { buffer: uniformBuffer, size: matrixSize, offset: offset } }],
     });
 
     const projectionMatrix = mat4.create();
     const viewMatrix = mat4.create();
-    const modelMatrix = mat4.create();
-    const mvpMatrix = mat4.create();
+    const modelMatrix0 = mat4.create();
+    const modelMatrix1 = mat4.create();
+    const mvpMatrix0 = mat4.create();
+    const mvpMatrix1 = mat4.create();
 
     // Setup projection matrix
     const aspect = canvas.width / canvas.height;
@@ -141,16 +153,37 @@ const init = async () => {
         const now = Date.now() / 1000;
 
         // Reset and rotate model matrix
-        mat4.identity(modelMatrix);
-        mat4.rotateX(modelMatrix, modelMatrix, now);
-        mat4.rotateY(modelMatrix, modelMatrix, now);
+        mat4.identity(modelMatrix0);
+        {
+            const rot = quat.create();
+            quat.rotateX(rot, rot, now);
+            quat.rotateY(rot, rot, now);
+            mat4.fromRotationTranslationScale(modelMatrix0, rot, [Math.cos(now), 0, Math.sin(now)], [0.5, 0.5, 0.5]);
+        }
+
+        mat4.identity(modelMatrix1);
+        {
+            const rot = quat.create();
+            quat.rotateX(rot, rot, now);
+            quat.rotateY(rot, rot, now);
+            mat4.fromRotationTranslationScale(modelMatrix1, rot, [-Math.cos(now), 0, -Math.sin(now)], [0.5, 0.5, 0.5]);
+        }
 
         // Calculate MVP = Projection * View * Model
         const temp = mat4.create();
-        mat4.multiply(temp, viewMatrix, modelMatrix);
-        mat4.multiply(mvpMatrix, projectionMatrix, temp);
+        mat4.multiply(temp, viewMatrix, modelMatrix0);
+        mat4.multiply(mvpMatrix0, projectionMatrix, temp);
 
-        device.queue.writeBuffer(uniformBuffer, 0, new Float32Array(mvpMatrix));
+        mat4.multiply(temp, viewMatrix, modelMatrix1);
+        mat4.multiply(mvpMatrix1, projectionMatrix, temp);
+
+        var mvpMatrix0Array = new Float32Array(mvpMatrix0);
+        var mvpMatrix1Array = new Float32Array(mvpMatrix1);
+        // バッファを書き込む
+        // byteOffsetとはTypedArrayがbufferの何バイト目から参照しているかを表している(Float32Arrayを作る時に指定できる。今回は0バイト目から参照している。)
+        // byteLengthとはTypedArrayがbufferの何バイト分参照しているかを表している
+        device.queue.writeBuffer(uniformBuffer, 0, mvpMatrix0Array.buffer, mvpMatrix0Array.byteOffset, mvpMatrix0Array.byteLength);
+        device.queue.writeBuffer(uniformBuffer, offset, mvpMatrix1Array.buffer, mvpMatrix1Array.byteOffset, mvpMatrix1Array.byteLength);    // オフセットを指定して書き込む
 
         const commandEncoder = device.createCommandEncoder();
         const textureView = context.getCurrentTexture().createView();
@@ -171,10 +204,16 @@ const init = async () => {
         });
 
         renderPass.setPipeline(pipeline);
-        renderPass.setBindGroup(0, bindGroup);
         renderPass.setVertexBuffer(0, vertexBuffer);
         renderPass.setIndexBuffer(indexBuffer, 'uint16');
+
+        // 2つのモデルを描画する
+        renderPass.setBindGroup(0, bindGroup0);
         renderPass.drawIndexed(36);
+
+        renderPass.setBindGroup(0, bindGroup1);
+        renderPass.drawIndexed(36);
+
         renderPass.end();
 
         device.queue.submit([commandEncoder.finish()]);

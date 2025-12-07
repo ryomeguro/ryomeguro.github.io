@@ -94,7 +94,7 @@ const init = async () => {
             module: shaderModule,
             entryPoint: 'vs_main',
             buffers: [{
-                arrayStride: 24,
+                arrayStride: 24,    // 1頂点あたりのバイト数 24 = 4(float32) * 6(position + color)
                 attributes: [
                     { shaderLocation: 0, offset: 0, format: 'float32x3' },  // position
                     { shaderLocation: 1, offset: 12, format: 'float32x3' }, // color offset = 4(float32) * 3(position)
