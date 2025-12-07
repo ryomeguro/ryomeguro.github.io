@@ -2,6 +2,7 @@ export function initNavigation() {
     const sidebar = document.querySelector('#sidebar');
     if (!sidebar) return;
 
+    // ページを追加した場合、vite.config.tsにも追加する必要がある
     sidebar.innerHTML = `
         <h2>WebGPU Samples</h2>
         <ul>
