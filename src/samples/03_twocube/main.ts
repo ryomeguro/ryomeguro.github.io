@@ -1,5 +1,6 @@
 import shaderCode from './shader.wgsl?raw';
 import { mat4, quat } from 'gl-matrix';
+import * as dat from 'dat.gui';
 
 const init = async () => {
     if (!navigator.gpu) throw new Error('WebGPU not supported');
@@ -149,24 +150,38 @@ const init = async () => {
         [0, 1, 0]   // up vector
     );
 
+    // Setup dat.GUI
+    const settings = {
+        speed: 1.0,
+    };
+    const gui = new dat.GUI();
+    gui.add(settings, 'speed', 0.0, 5.0).name('Rotation Speed');
+
+    let previousTime = Date.now() / 1000;
+    let currentAngle = previousTime; // Start with current time to match previous behavior roughly, or 0
+
     function frame() {
         const now = Date.now() / 1000;
+        const deltaTime = now - previousTime;
+        previousTime = now;
+
+        currentAngle += deltaTime * settings.speed;
 
         // Reset and rotate model matrix
         mat4.identity(modelMatrix0);
         {
             const rot = quat.create();
-            quat.rotateX(rot, rot, now);
-            quat.rotateY(rot, rot, now);
-            mat4.fromRotationTranslationScale(modelMatrix0, rot, [Math.cos(now), 0, Math.sin(now)], [0.5, 0.5, 0.5]);
+            quat.rotateX(rot, rot, currentAngle);
+            quat.rotateY(rot, rot, currentAngle);
+            mat4.fromRotationTranslationScale(modelMatrix0, rot, [Math.cos(currentAngle), 0, Math.sin(currentAngle)], [0.5, 0.5, 0.5]);
         }
 
         mat4.identity(modelMatrix1);
         {
             const rot = quat.create();
-            quat.rotateX(rot, rot, now);
-            quat.rotateY(rot, rot, now);
-            mat4.fromRotationTranslationScale(modelMatrix1, rot, [-Math.cos(now), 0, -Math.sin(now)], [0.5, 0.5, 0.5]);
+            quat.rotateX(rot, rot, currentAngle);
+            quat.rotateY(rot, rot, currentAngle);
+            mat4.fromRotationTranslationScale(modelMatrix1, rot, [-Math.cos(currentAngle), 0, -Math.sin(currentAngle)], [0.5, 0.5, 0.5]);
         }
 
         // Calculate MVP = Projection * View * Model
