@@ -3,6 +3,7 @@ export function initNavigation() {
     if (!sidebar) return;
 
     // Side navigation content
+    // vite.config.tsにも追加する必要がある
     sidebar.innerHTML = `
         <h2>WebGPU Samples</h2>
         <ul>
@@ -13,6 +14,7 @@ export function initNavigation() {
             <li><a href="/src/samples/01_triangle/index.html">Draw Single Triangle</a></li>
             <li><a href="/src/samples/02_cube/index.html">Draw Cube</a></li>
             <li><a href="/src/samples/03_twocube/index.html">Draw Two Cubes</a></li>
+            <li><a href="/src/samples/04_texturecube/index.html">Texture Cube</a></li>
         </ul>
     `;
 
