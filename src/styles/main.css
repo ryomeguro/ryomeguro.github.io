@@ -52,17 +52,81 @@ body {
 
 #canvas-container {
   flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  display: flex !important;
+  flex-direction: column !important;
   position: relative;
   overflow: hidden;
+  background-color: #111;
 }
 
 canvas {
-  max-width: 100%;
-  max-height: 100%;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  flex: 1 1 auto !important;
+  /* Grow and shrink */
+  height: auto !important;
+  /* Allow shrinking below content size */
+  min-height: 0 !important;
+  width: 100%;
+  object-fit: contain;
+  box-shadow: none;
+  margin: 0 !important;
+  display: block;
+}
+
+/* Source Viewer */
+#source-viewer {
+  flex: 0 0 40% !important;
+  /* Strictly 40% */
+  height: 40% !important;
+  background-color: #282c34;
+  display: flex !important;
+  flex-direction: column !important;
+  z-index: 50;
+  /* Ensure on top */
+  border-top: 1px solid #444;
+  box-sizing: border-box;
+}
+
+.source-tabs {
+  display: flex;
+  background-color: #21252b;
+  overflow-x: auto;
+  min-height: 36px;
+  flex-shrink: 0;
+}
+
+.source-tab {
+  background: none;
+  border: none;
+  color: #abb2bf;
+  padding: 8px 15px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+}
+
+.source-tab:hover {
+  background-color: #2c313a;
+}
+
+.source-tab.active {
+  color: #fff;
+  border-bottom: 2px solid #646cff;
+  background-color: #282c34;
+}
+
+.source-editor {
+  flex: 1;
+  overflow: hidden;
+  /* CM handles scrolling */
+  font-size: 13px;
+  position: relative;
+}
+
+/* Ensure CodeMirror takes full height of container */
+.cm-editor {
+  height: 100%;
 }
 
 .source-link {
