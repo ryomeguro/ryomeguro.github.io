@@ -38,6 +38,7 @@
     "@codemirror/view": "^6.38.8",
     "codemirror": "^6.0.2",
     "dat.gui": "^0.7.9",
-    "gl-matrix": "^3.4.4"
+    "gl-matrix": "^3.4.4",
+    "gltf-loader-ts": "^0.3.1"
   }
 }
