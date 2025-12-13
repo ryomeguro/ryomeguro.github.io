@@ -29,13 +29,15 @@ fn fs_main(@location(0) normal: vec3f, @location(1) worldPos: vec3f, @location(2
     let lightDir = normalize(vec3f(1.0, 1.0, 1.0));
     let viewDir = normalize(vec3f(0.0, 0.0, 5.0) - worldPos);
     let norm = normalize(normal);
-    
+
+    let color = textureSample(colorTexture, colorSampler, uv).rgb;
+
     // Ambient
-    let ambient = vec3f(0.2, 0.2, 0.2);
+    let ambient = color * mix(vec3f(0.8, 0.5, 0.2), vec3f(0.3, 0.4, 0.8), norm.y * 0.5 + 0.5) * 0.5;
     
     // Diffuse
     let diff = max(dot(norm, lightDir), 0.0);
-    let diffuse = diff * textureSample(colorTexture, colorSampler, uv).rgb;
+    let diffuse = color * diff;
     
     // Specular
     let reflectDir = reflect(-lightDir, norm);
