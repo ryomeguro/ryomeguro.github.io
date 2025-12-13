@@ -85,6 +85,18 @@ body {
   /* Remove default margins to minimize vertical space */
 }
 
+.sample-header a {
+  color: #ff8800;
+  /* Orange color for links */
+  text-decoration: none;
+}
+
+.sample-header a:hover {
+  color: #ffaa33;
+  /* Lighter orange on hover */
+  text-decoration: underline;
+}
+
 .sample-controls {
   position: absolute;
   top: 100%;
