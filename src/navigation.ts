@@ -16,6 +16,7 @@ export function initNavigation() {
             <li><a href="/src/samples/03_twocube/index.html">Draw Two Cubes</a></li>
             <li><a href="/src/samples/04_texturecube/index.html">Texture Cube</a></li>
             <li><a href="/src/samples/05_gltf_load/index.html">glTF Load</a></li>
+            <li><a href="/src/samples/06_multi_view/index.html">Multiple Views</a></li>
         </ul>
     `;
 

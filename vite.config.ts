@@ -11,6 +11,7 @@ export default defineConfig({
         twocube: resolve(__dirname, 'src/samples/03_twocube/index.html'),
         texturecube: resolve(__dirname, 'src/samples/04_texturecube/index.html'),
         gltfload: resolve(__dirname, 'src/samples/05_gltf_load/index.html'),
+        multi_view: resolve(__dirname, 'src/samples/06_multi_view/index.html'),
       },
     },
   },
