@@ -212,6 +212,45 @@ const init = async () => {
     }
 
     /*
+     * リソースの事前生成
+     * テクスチャを毎フレーム生成するのはかなり重く、ガベージコレクションが走って定期的にカクつく
+     */
+    const colorTexture = device.createTexture({
+        size: [canvas.width / 2, canvas.height / 2],
+        format,
+        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
+    });
+    const depthTexture = device.createTexture({
+        size: [canvas.width / 2, canvas.height / 2],
+        format: 'depth24plus',
+        usage: GPUTextureUsage.RENDER_ATTACHMENT,
+    });
+
+    const copyBindGroup = device.createBindGroup({
+        layout: copyPipeline.getBindGroupLayout(0),
+        entries: [
+            { binding: 0, resource: colorTexture.createView() },
+            { binding: 1, resource: copySampler },
+        ],
+    });
+    const cubeBindGroups: GPUBindGroup[] = []; // [view0_model0, view0_model1, view1_model0, ...]
+
+    for (let i = 0; i < viewNum; i++) {
+        // キューブ用バインドグループの作成
+        const cubeBindGroup0 = device.createBindGroup({
+            layout: cubePipeline.getBindGroupLayout(0),
+            entries: [{ binding: 0, resource: { buffer: cubeUniformBuffer, size: matrixSize, offset: i * offset * 2 } }],
+        });
+        cubeBindGroups.push(cubeBindGroup0);
+
+        const cubeBindGroup1 = device.createBindGroup({
+            layout: cubePipeline.getBindGroupLayout(0),
+            entries: [{ binding: 0, resource: { buffer: cubeUniformBuffer, size: matrixSize, offset: i * offset * 2 + offset } }],
+        });
+        cubeBindGroups.push(cubeBindGroup1);
+    }
+
+    /*
      * フレームの更新
      */
 
@@ -272,29 +311,7 @@ const init = async () => {
             [-1, 2, 5],
         ];
 
-        let renderBufferSize = [
-            [canvas.width / 2, canvas.height / 2],
-            [canvas.width / 3, canvas.height / 3],
-            [canvas.width / 4, canvas.height / 4],
-            [canvas.width / 5, canvas.height / 5],
-        ]
-
         for (let i = 0; i < viewNum; i++) {
-            /*
-             * レンダーターゲットとなるテクスチャの作成
-             * テクスチャは使用されなくなるとガベージコレクションされるため、明示的なdestroy()は不要
-             */
-            const colorTexture = device.createTexture({
-                size: renderBufferSize[i],
-                format,
-                usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
-            });
-            const depthTexture = device.createTexture({
-                size: renderBufferSize[i],
-                format: 'depth24plus',
-                usage: GPUTextureUsage.RENDER_ATTACHMENT,
-            });
-
             /*
              * キューブの描画
              */
@@ -338,16 +355,6 @@ const init = async () => {
                 device.queue.writeBuffer(cubeUniformBuffer, i * offset * 2, mvpMatrix0Array.buffer, mvpMatrix0Array.byteOffset, mvpMatrix0Array.byteLength);
                 device.queue.writeBuffer(cubeUniformBuffer, i * offset * 2 + offset, mvpMatrix1Array.buffer, mvpMatrix1Array.byteOffset, mvpMatrix1Array.byteLength);    // オフセットを指定して書き込む
 
-                const cubeBindGroup0 = device.createBindGroup({
-                    layout: cubePipeline.getBindGroupLayout(0),
-                    entries: [{ binding: 0, resource: { buffer: cubeUniformBuffer, size: matrixSize, offset: i * offset * 2 } }],
-                });
-
-                const cubeBindGroup1 = device.createBindGroup({
-                    layout: cubePipeline.getBindGroupLayout(0),
-                    entries: [{ binding: 0, resource: { buffer: cubeUniformBuffer, size: matrixSize, offset: i * offset * 2 + offset } }],
-                });
-
                 const renderPass = commandEncoder.beginRenderPass({
                     colorAttachments: [{
                         view: colorTexture.createView(),
@@ -368,10 +375,10 @@ const init = async () => {
                 renderPass.setIndexBuffer(cubeIndexBuffer, 'uint16');
 
                 // 2つのモデルを描画する
-                renderPass.setBindGroup(0, cubeBindGroup0);
+                renderPass.setBindGroup(0, cubeBindGroups[2 * i]);
                 renderPass.drawIndexed(cubeIndices.length);
 
-                renderPass.setBindGroup(0, cubeBindGroup1);
+                renderPass.setBindGroup(0, cubeBindGroups[2 * i + 1]);
                 renderPass.drawIndexed(cubeIndices.length);
 
                 renderPass.end();
@@ -381,14 +388,6 @@ const init = async () => {
             * テクスチャをフレームバッファにコピー
             */
             {
-                const copyBindGroup = device.createBindGroup({
-                    layout: copyPipeline.getBindGroupLayout(0),
-                    entries: [
-                        { binding: 0, resource: colorTexture.createView() },
-                        { binding: 1, resource: copySampler },
-                    ],
-                });
-
                 const textureView = context.getCurrentTexture().createView();
 
                 const renderPass = commandEncoder.beginRenderPass({
