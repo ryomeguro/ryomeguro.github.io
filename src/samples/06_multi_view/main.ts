@@ -16,38 +16,39 @@ const init = async () => {
     const viewNum = 4;
 
     // Cube data
+    // Top Faceが緑色になるようにしている
     const cubeVertices = new Float32Array([
         // position (3), color (3)
         // Front face
-        -1, -1, 1, 1, 0, 0,
-        1, -1, 1, 0, 1, 0,
-        1, 1, 1, 0, 0, 1,
-        -1, 1, 1, 1, 1, 0,
+        -1, -1, 1, 0, 0, 0,
+        1, -1, 1, 0, 0, 0,
+        1, 1, 1, 0, 1, 0,
+        -1, 1, 1, 0, 1, 0,
         // Back face
-        -1, -1, -1, 1, 0, 1,
-        -1, 1, -1, 0, 1, 1,
-        1, 1, -1, 1, 1, 1,
+        -1, -1, -1, 0, 0, 0,
+        -1, 1, -1, 0, 1, 0,
+        1, 1, -1, 0, 1, 0,
         1, -1, -1, 0, 0, 0,
         // Top face
-        -1, 1, -1, 1, 0, 0,
+        -1, 1, -1, 0, 1, 0,
         -1, 1, 1, 0, 1, 0,
-        1, 1, 1, 0, 0, 1,
-        1, 1, -1, 1, 1, 0,
+        1, 1, 1, 0, 1, 0,
+        1, 1, -1, 0, 1, 0,
         // Bottom face
-        -1, -1, -1, 1, 0, 1,
-        1, -1, -1, 0, 1, 1,
-        1, -1, 1, 1, 1, 1,
+        -1, -1, -1, 0, 0, 0,
+        1, -1, -1, 0, 0, 0,
+        1, -1, 1, 0, 0, 0,
         -1, -1, 1, 0, 0, 0,
         // Right face
-        1, -1, -1, 1, 0, 0,
+        1, -1, -1, 0, 0, 0,
         1, 1, -1, 0, 1, 0,
-        1, 1, 1, 0, 0, 1,
-        1, -1, 1, 1, 1, 0,
+        1, 1, 1, 0, 1, 0,
+        1, -1, 1, 0, 0, 0,
         // Left face
-        -1, -1, -1, 1, 0, 1,
-        -1, -1, 1, 0, 1, 1,
-        -1, 1, 1, 1, 1, 1,
-        -1, 1, -1, 0, 0, 0,
+        -1, -1, -1, 0, 0, 0,
+        -1, -1, 1, 0, 0, 0,
+        -1, 1, 1, 0, 1, 0,
+        -1, 1, -1, 0, 1, 0,
     ]);
 
     const cubeIndices = new Uint16Array([
@@ -123,6 +124,7 @@ const init = async () => {
         primitive: {
             topology: 'triangle-list',
             cullMode: 'back',
+            frontFace: 'cw', // Y軸反転により巻き順が逆転するため、時計回りを表とする
         },
         depthStencil: {
             depthWriteEnabled: true,
@@ -308,6 +310,11 @@ const init = async () => {
                 const near = 0.1;
                 const far = 100.0;
                 mat4.perspective(projectionMatrix, fov, aspect, near, far);
+
+                // WebGPUのNDC座標系はY+が下方向だが、ワールド座標はY+upとして扱いたい
+                // gl-matrixはOpenGL用（Y+が上）の射影行列を生成するため、Y軸を反転
+                // projectionMatrix[5]はY軸のスケール成分
+                projectionMatrix[5] *= -1;
 
                 // Setup view matrix (camera at (0, 0, 5) looking at origin)
                 mat4.lookAt(
