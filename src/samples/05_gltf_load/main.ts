@@ -249,6 +249,8 @@ const init = async () => {
         mat4.multiply(mvpMatrix, projectionMatrix, temp);
 
         // Calculate normal matrix (inverse transpose of model matrix)
+        // 回転と均等スケールだけ行う場合はモデル行列をそのまま使えば良い
+        // 逆行列の転置を使うことで不等比スケールやせん断にも対応可能
         mat4.invert(normalMatrix, modelMatrix);
         mat4.transpose(normalMatrix, normalMatrix);
 

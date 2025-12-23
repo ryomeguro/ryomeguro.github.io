@@ -12,6 +12,7 @@ export default defineConfig({
         texturecube: resolve(__dirname, 'src/samples/04_texturecube/index.html'),
         gltfload: resolve(__dirname, 'src/samples/05_gltf_load/index.html'),
         multi_view: resolve(__dirname, 'src/samples/06_multi_view/index.html'),
+        shadow_map: resolve(__dirname, 'src/samples/07_shadow_map/index.html'),
       },
     },
   },

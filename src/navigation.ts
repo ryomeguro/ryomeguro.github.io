@@ -18,6 +18,10 @@ export function initNavigation() {
             <li><a href="/src/samples/05_gltf_load/index.html">glTF Load</a></li>
             <li><a href="/src/samples/06_multi_view/index.html">Multiple Views</a></li>
         </ul>
+        <h3>Rendering</h3>
+        <ul>
+            <li><a href="/src/samples/07_shadow_map/index.html">Shadow Map</a></li>
+        </ul>
     `;
 
     // Check if we are on a sample page and inject source link/viewer
