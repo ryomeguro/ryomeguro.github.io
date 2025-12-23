@@ -152,7 +152,9 @@ const init = async () => {
     const matrixSize = 4 * 16; // 4x4 matrix
     const matrixNum = 2;
     const offset = 256; // uniformBindGroup offset must be 256-byte aligned
-    const uniformBufferSize = offset * 2 + matrixSize * matrixNum; // 3つのバインドグループ
+    const uniformBufferSize = offset * 3 + matrixSize * matrixNum;
+
+    const commonUBOSize = 4 * 4;
 
     // 今回はモデルが2つあるのでこのuniformBufferにUBOを2つ確保する
     const uniformBuffer = device.createBuffer({
@@ -163,17 +165,26 @@ const init = async () => {
     // sizeを省略した場合、バッファ全体を参照するため、今回はsizeを指定する必要がある
     const cubeBindGroup = device.createBindGroup({
         layout: cubePipeline.getBindGroupLayout(0),
-        entries: [{ binding: 0, resource: { buffer: uniformBuffer, size: matrixSize * matrixNum, offset: 0 } }],
+        entries: [
+            { binding: 0, resource: { buffer: uniformBuffer, size: commonUBOSize, offset: 0 } },
+            { binding: 1, resource: { buffer: uniformBuffer, size: matrixSize * matrixNum, offset: offset } }
+        ],
     });
 
     const torusBindGroup = device.createBindGroup({
         layout: torusPipeline.getBindGroupLayout(0),
-        entries: [{ binding: 0, resource: { buffer: uniformBuffer, size: matrixSize * matrixNum, offset: offset } }],
+        entries: [
+            { binding: 0, resource: { buffer: uniformBuffer, size: commonUBOSize, offset: 0 } },
+            { binding: 1, resource: { buffer: uniformBuffer, size: matrixSize * matrixNum, offset: offset * 2 } }
+        ],
     });
 
     const quadBindGroup = device.createBindGroup({
         layout: quadPipeline.getBindGroupLayout(0),
-        entries: [{ binding: 0, resource: { buffer: uniformBuffer, size: matrixSize * matrixNum, offset: offset * 2 } }],
+        entries: [
+            { binding: 0, resource: { buffer: uniformBuffer, size: commonUBOSize, offset: 0 } },
+            { binding: 1, resource: { buffer: uniformBuffer, size: matrixSize * matrixNum, offset: offset * 3 } }
+        ],
     });
 
     const projectionMatrix = mat4.create();
@@ -282,12 +293,14 @@ const init = async () => {
         // バッファを書き込む
         // byteOffsetとはTypedArrayがbufferの何バイト目から参照しているかを表している(Float32Arrayを作る時に指定できる。今回は0バイト目から参照している。)
         // byteLengthとはTypedArrayがbufferの何バイト分参照しているかを表している
-        device.queue.writeBuffer(uniformBuffer, 0, mvpMatrix0Array.buffer, mvpMatrix0Array.byteOffset, mvpMatrix0Array.byteLength);
-        device.queue.writeBuffer(uniformBuffer, matrixSize, modelMatrix0Array.buffer, modelMatrix0Array.byteOffset, modelMatrix0Array.byteLength);
-        device.queue.writeBuffer(uniformBuffer, offset, mvpMatrix1Array.buffer, mvpMatrix1Array.byteOffset, mvpMatrix1Array.byteLength);    // オフセットを指定して書き込む
-        device.queue.writeBuffer(uniformBuffer, offset + matrixSize, modelMatrix1Array.buffer, modelMatrix1Array.byteOffset, modelMatrix1Array.byteLength);
-        device.queue.writeBuffer(uniformBuffer, offset * 2, mvpMatrix2Array.buffer, mvpMatrix2Array.byteOffset, mvpMatrix2Array.byteLength);
-        device.queue.writeBuffer(uniformBuffer, offset * 2 + matrixSize, modelMatrix2Array.buffer, modelMatrix2Array.byteOffset, modelMatrix2Array.byteLength);
+        device.queue.writeBuffer(uniformBuffer, 0, new Float32Array([1.0, 1.0, 1.0, 1.0]), 0, 4);
+
+        device.queue.writeBuffer(uniformBuffer, offset, mvpMatrix0Array.buffer, mvpMatrix0Array.byteOffset, mvpMatrix0Array.byteLength);
+        device.queue.writeBuffer(uniformBuffer, offset + matrixSize, modelMatrix0Array.buffer, modelMatrix0Array.byteOffset, modelMatrix0Array.byteLength);
+        device.queue.writeBuffer(uniformBuffer, offset * 2, mvpMatrix1Array.buffer, mvpMatrix1Array.byteOffset, mvpMatrix1Array.byteLength);    // オフセットを指定して書き込む
+        device.queue.writeBuffer(uniformBuffer, offset * 2 + matrixSize, modelMatrix1Array.buffer, modelMatrix1Array.byteOffset, modelMatrix1Array.byteLength);
+        device.queue.writeBuffer(uniformBuffer, offset * 3, mvpMatrix2Array.buffer, mvpMatrix2Array.byteOffset, mvpMatrix2Array.byteLength);
+        device.queue.writeBuffer(uniformBuffer, offset * 3 + matrixSize, modelMatrix2Array.buffer, modelMatrix2Array.byteOffset, modelMatrix2Array.byteLength);
 
         const commandEncoder = device.createCommandEncoder();
         const textureView = context.getCurrentTexture().createView();
