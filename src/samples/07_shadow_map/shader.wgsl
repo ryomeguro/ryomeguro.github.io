@@ -1,47 +1,76 @@
-struct CommonUBO {
-    lightDir: vec4f,
+override shadowDepthTextureSize: f32 = 1024.0;
+
+struct Scene {
+    lightViewProjMatrix: mat4x4f,
+    cameraViewProjMatrix: mat4x4f,
+    lightPos: vec4f,
 }
-struct ModelUBO {
-    mvp: mat4x4<f32>,
-    modelMtx: mat4x4<f32>,
+
+struct Model {
+    modelMatrix: mat4x4f,
 }
-@binding(0) @group(0) var<uniform> commonUBO : CommonUBO;
-@binding(1) @group(0) var<uniform> modelUBO : ModelUBO;
+
+@group(0) @binding(0) var<uniform> scene : Scene;
+@group(0) @binding(1) var shadowMap: texture_depth_2d;
+@group(0) @binding(2) var shadowSampler: sampler_comparison;
+@group(1) @binding(0) var<uniform> model : Model;
 
 struct VertexOutput {
     @builtin(position) position: vec4f,
-    @location(0) normal: vec3f,
-    @location(1) worldPos: vec3f,
+    @location(0) shadowPos: vec3f,
+    @location(1) fragPos: vec3f,
+    @location(2) fragNorm: vec3f,
 }
 
 @vertex
-fn vs_main(@location(0) pos: vec3f, @location(1) normal: vec3f) -> VertexOutput {
+fn vs_main(@location(0) position: vec3f, @location(1) normal: vec3f) -> VertexOutput {
     var output: VertexOutput;
-    output.position = modelUBO.mvp * vec4f(pos, 1.0);
-    output.normal = (modelUBO.modelMtx * vec4f(normal, 0.0)).xyz;
-    output.worldPos = (modelUBO.modelMtx * vec4f(pos, 1.0)).xyz;
+
+    // XY is in (-1, 1) space, Z is in (0, 1) space
+    let posFromLight = scene.lightViewProjMatrix * model.modelMatrix * vec4f(position, 1.0);
+
+    // Convert XY to (0, 1)
+    // Y is flipped because texture coords are Y-down.
+    output.shadowPos = vec3f(
+        posFromLight.xy * vec2f(0.5, -0.5) + vec2f(0.5),
+        posFromLight.z
+    );
+
+    output.position = scene.cameraViewProjMatrix * model.modelMatrix * vec4f(position, 1.0);
+    output.fragPos = output.position.xyz;
+    output.fragNorm = (model.modelMatrix * vec4f(normal, 0.0)).xyz;
     return output;
 }
 
 @fragment
-fn fs_main(@location(0) normal: vec3f, @location(1) worldPos: vec3f) -> @location(0) vec4f {
+fn fs_main(input: VertexOutput) -> @location(0) vec4f {
+    var visibility = 0.0;
+    let oneOverShadowDepthTextureSize = 1.0 / shadowDepthTextureSize;
+    for (var y = -1; y <= 1; y++) {
+        for (var x = -1; x <= 1; x++) {
+            let offset = vec2f(vec2(x, y)) * oneOverShadowDepthTextureSize;
+
+            visibility += textureSampleCompare(
+                shadowMap, shadowSampler,
+                input.shadowPos.xy + offset, input.shadowPos.z - 0.007
+            );
+        }
+    }
+    visibility /= 9.0;
+
     // Phong shading
-    let lightDir = normalize(commonUBO.lightDir.xyz);
-    let viewDir = normalize(vec3f(0.0, 0.0, 5.0) - worldPos);
-    let norm = normalize(normal);
+    let lightDir = normalize(scene.lightPos.xyz);
+    // let lightDir = normalize(vec3f(0.0, 1.0, 1.0));
+    let viewDir = normalize(vec3f(0.0, 0.0, 5.0) - input.fragPos);
+    let norm = normalize(input.fragNorm);
 
     // Ambient
     let ambient = mix(vec3f(0.8, 0.5, 0.2), vec3f(0.3, 0.4, 0.8), norm.y * 0.5 + 0.5) * 0.5;
-    
-    // Diffuse
-    let diff = max(dot(norm, lightDir), 0.0);
-    let diffuse = diff;
-    
-    // Specular
-    let reflectDir = reflect(-lightDir, norm);
-    let spec = pow(max(dot(viewDir, reflectDir), 0.0), 32.0);
-    let specular = spec;
 
-    let result = ambient + diffuse + specular;
+    // Diffuse
+    let diff = max(dot(norm, lightDir), 0.0) * visibility;
+    let diffuse = vec3f(diff);
+
+    let result = ambient + diffuse;
     return vec4f(result, 1.0);
 }
