@@ -323,10 +323,10 @@ const init = async () => {
     const lightViewProjMatrix = mat4.create();
     const lightPosition = [50, 100, 100];
     {
-        const left = -5;
-        const right = 5;
-        const bottom = -5;
-        const top = 5;
+        const left = -2;
+        const right = 2;
+        const bottom = -2;
+        const top = 2;
         const near = 50;
         const far = 200;
         mat4.ortho(lightProjectionMatrix, left, right, bottom, top, near, far);

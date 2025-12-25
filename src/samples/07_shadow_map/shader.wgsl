@@ -52,7 +52,7 @@ fn fs_main(input: VertexOutput) -> @location(0) vec4f {
 
             visibility += textureSampleCompare(
                 shadowMap, shadowSampler,
-                input.shadowPos.xy + offset, input.shadowPos.z - 0.007
+                input.shadowPos.xy + offset, input.shadowPos.z - 0.001
             );
         }
     }
