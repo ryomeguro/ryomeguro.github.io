@@ -1,7 +1,7 @@
 import materialShaderCode from './shader.wgsl?raw';
 import shadowMapShaderCode from './shadowMap.wgsl?raw';
 import texturePreviewShaderCode from './texturePreview.wgsl?raw';
-import { mat4, quat, vec3 } from 'gl-matrix';
+import { mat4, quat, vec3 } from 'wgpu-matrix';
 import * as dat from 'dat.gui';
 
 import * as torus from './torus';
@@ -295,27 +295,21 @@ const init = async () => {
     };
 
     // カメラの行列計算
-    const cameraProjectionMatrix = mat4.create();
-    const cameraViewMatrix = mat4.create();
-    const cameraViewProjMatrix = mat4.create();
 
     // Setup projection matrix
     const aspect = canvas.width / canvas.height;
     const fov = (30 * Math.PI) / 180;
     const near = 0.1;
     const far = 100.0;
-    mat4.perspective(cameraProjectionMatrix, fov, aspect, near, far);
+    const cameraProjectionMatrix = mat4.perspective(fov, aspect, near, far);
 
     // Setup view matrix (camera at (0, 0, 5) looking at origin)
-    mat4.lookAt(
-        cameraViewMatrix,
+    const cameraViewMatrix = mat4.lookAt(
         [0, 0, 5],  // eye position
         [0, 0, 0],  // target position
-        [0, 1, 0]   // up vector
+        [0, 1, 0],  // up vector
     );
-    mat4.multiply(cameraViewProjMatrix, cameraProjectionMatrix, cameraViewMatrix);
-
-    var cameraViewProjMatrixArray = new Float32Array(cameraViewProjMatrix);
+    const cameraViewProjMatrix = mat4.multiply(cameraProjectionMatrix, cameraViewMatrix);
 
     // Setup dat.GUI
     const settings = {
@@ -356,12 +350,10 @@ const init = async () => {
         currentAngle += deltaTime;
 
         // ライトの行列計算
-        const lightProjectionMatrix = mat4.create();
-        const lightViewMatrix = mat4.create();
-        const lightViewProjMatrix = mat4.create();
-        const lightDir = vec3.create();
-        vec3.set(lightDir, Math.cos(settings.lightAngle * Math.PI / 180), 1, Math.sin(settings.lightAngle * Math.PI / 180));
+        const lightDir = vec3.set(Math.cos(settings.lightAngle * Math.PI / 180), 1, Math.sin(settings.lightAngle * Math.PI / 180));
         vec3.normalize(lightDir, lightDir);
+
+        const lightProjectionMatrix = mat4.create();
         {
             const left = -2;
             const right = 2;
@@ -369,20 +361,22 @@ const init = async () => {
             const top = 2;
             const near = -20;
             const far = 20;
-            mat4.ortho(lightProjectionMatrix, left, right, bottom, top, near, far);
+            mat4.ortho(left, right, bottom, top, near, far, lightProjectionMatrix);
         }
+
+        const lightViewMatrix = mat4.create();
         {
             const center = vec3.create();
-            vec3.set(center, 0, 0, 0);
+            vec3.set(0, 0, 0, center);
             const eye = vec3.create();
             const lightDirTmp = vec3.create();
-            vec3.scale(lightDirTmp, lightDir, 5);
-            vec3.sub(eye, lightDirTmp, center);
+            vec3.scale(lightDir, 5, lightDirTmp);
+            vec3.subtract(lightDirTmp, center, eye);
             const up = vec3.create();
-            vec3.set(up, 0, 1, 0);
-            mat4.lookAt(lightViewMatrix, eye, center, up);
+            vec3.set(0, 1, 0, up);
+            mat4.lookAt(eye, center, up, lightViewMatrix);
         }
-        mat4.multiply(lightViewProjMatrix, lightProjectionMatrix, lightViewMatrix);
+        const lightViewProjMatrix = mat4.multiply(lightProjectionMatrix, lightViewMatrix);
 
         // モデル行列の計算
         const modelMatrixTorus = mat4.create();
@@ -390,30 +384,26 @@ const init = async () => {
         // Reset and rotate model matrix
         mat4.identity(modelMatrixTorus);
         {
-            const rot = quat.create();
-            quat.rotateX(rot, rot, currentAngle);
-            quat.rotateZ(rot, rot, currentAngle);
-            mat4.fromRotationTranslationScale(modelMatrixTorus, rot, [0, 0, 0], [0.5, 0.5, 0.5]);
+            const rot = quat.identity();
+            quat.rotateX(rot, currentAngle, rot);
+            quat.rotateZ(rot, currentAngle, rot);
+            mat4.translate(modelMatrixTorus, [0, 0, 0], modelMatrixTorus);
+            mat4.multiply(modelMatrixTorus, mat4.fromQuat(rot), modelMatrixTorus);
+            mat4.scale(modelMatrixTorus, [0.5, 0.5, 0.5], modelMatrixTorus);
         }
         mat4.identity(modelMatrixQuad);
         {
-            const rot = quat.create();
-            mat4.fromRotationTranslationScale(modelMatrixQuad, rot, [0, -1, 0], [5.0, 5.0, 5.0]);
+            mat4.translate(modelMatrixQuad, [0, -1, 0], modelMatrixQuad);
+            mat4.scale(modelMatrixQuad, [5.0, 5.0, 5.0], modelMatrixQuad);
         }
 
         // バッファを書き込む
-        // byteOffsetとはTypedArrayがbufferの何バイト目から参照しているかを表している(Float32Arrayを作る時に指定できる。今回は0バイト目から参照している。)
-        // byteLengthとはTypedArrayがbufferの何バイト分参照しているかを表している
-        var lightViewProjMatrixArray = new Float32Array(lightViewProjMatrix);
-        device.queue.writeBuffer(sceneUniformBuffer, 0, lightViewProjMatrixArray.buffer, lightViewProjMatrixArray.byteOffset, lightViewProjMatrixArray.byteLength);
-        device.queue.writeBuffer(sceneUniformBuffer, 64, cameraViewProjMatrixArray.buffer, cameraViewProjMatrixArray.byteOffset, cameraViewProjMatrixArray.byteLength);
-        var lightDirArray = new Float32Array(lightDir);
-        device.queue.writeBuffer(sceneUniformBuffer, 128, lightDirArray.buffer, lightDirArray.byteOffset, lightDirArray.byteLength);
+        device.queue.writeBuffer(sceneUniformBuffer, 0, lightViewProjMatrix.buffer);
+        device.queue.writeBuffer(sceneUniformBuffer, 64, cameraViewProjMatrix.buffer);
+        device.queue.writeBuffer(sceneUniformBuffer, 128, lightDir.buffer);
 
-        var modelMatrixTorusArray = new Float32Array(modelMatrixTorus);
-        device.queue.writeBuffer(torusModelUniformBuffer, 0, modelMatrixTorusArray.buffer, modelMatrixTorusArray.byteOffset, modelMatrixTorusArray.byteLength);
-        var modelMatrixQuadArray = new Float32Array(modelMatrixQuad);
-        device.queue.writeBuffer(quadModelUniformBuffer, 0, modelMatrixQuadArray.buffer, modelMatrixQuadArray.byteOffset, modelMatrixQuadArray.byteLength);
+        device.queue.writeBuffer(torusModelUniformBuffer, 0, modelMatrixTorus.buffer);
+        device.queue.writeBuffer(quadModelUniformBuffer, 0, modelMatrixQuad.buffer);
 
         const commandEncoder = device.createCommandEncoder();
         const textureView = context.getCurrentTexture().createView();
