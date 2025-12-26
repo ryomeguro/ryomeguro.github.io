@@ -3,7 +3,7 @@ override shadowDepthTextureSize: f32 = 1024.0;
 struct Scene {
     lightViewProjMatrix: mat4x4f,
     cameraViewProjMatrix: mat4x4f,
-    lightPos: vec4f,
+    lightDir: vec4f,
 }
 
 struct Model {
@@ -46,12 +46,10 @@ fn vs_main(@location(0) position: vec3f, @location(1) normal: vec3f) -> VertexOu
 fn fs_main(input: VertexOutput) -> @location(0) vec4f {
     var visibility = textureSampleCompare(
         shadowMap, shadowSampler,
-        input.shadowPos.xy, input.shadowPos.z - 0.001
+        input.shadowPos.xy, input.shadowPos.z - 0.002
     );
 
     // Phong shading
-    let lightDir = normalize(scene.lightPos.xyz);
-    // let lightDir = normalize(vec3f(0.0, 1.0, 1.0));
     let viewDir = normalize(vec3f(0.0, 0.0, 5.0) - input.fragPos);
     let norm = normalize(input.fragNorm);
 
@@ -59,7 +57,7 @@ fn fs_main(input: VertexOutput) -> @location(0) vec4f {
     let ambient = mix(vec3f(0.8, 0.5, 0.2), vec3f(0.3, 0.4, 0.8), norm.y * 0.5 + 0.5) * 0.5;
 
     // Diffuse
-    let diff = max(dot(norm, lightDir), 0.0) * visibility;
+    let diff = max(dot(norm, scene.lightDir.xyz), 0.0) * visibility;
     let diffuse = vec3f(diff);
 
     let result = ambient + diffuse;

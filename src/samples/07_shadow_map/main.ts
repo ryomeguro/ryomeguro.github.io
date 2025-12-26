@@ -1,7 +1,7 @@
 import materialShaderCode from './shader.wgsl?raw';
 import shadowMapShaderCode from './shadowMap.wgsl?raw';
 import texturePreviewShaderCode from './texturePreview.wgsl?raw';
-import { mat4, quat } from 'gl-matrix';
+import { mat4, quat, vec3 } from 'gl-matrix';
 import * as dat from 'dat.gui';
 
 import * as torus from './torus';
@@ -317,33 +317,12 @@ const init = async () => {
 
     var cameraViewProjMatrixArray = new Float32Array(cameraViewProjMatrix);
 
-    // ライトの行列計算
-    const lightProjectionMatrix = mat4.create();
-    const lightViewMatrix = mat4.create();
-    const lightViewProjMatrix = mat4.create();
-    const lightPosition = [50, 100, 100];
-    {
-        const left = -2;
-        const right = 2;
-        const bottom = -2;
-        const top = 2;
-        const near = 50;
-        const far = 200;
-        mat4.ortho(lightProjectionMatrix, left, right, bottom, top, near, far);
-    }
-    {
-        const center = [0, 0, 0];
-        const up = [0, 1, 0];
-        mat4.lookAt(lightViewMatrix, lightPosition, center, up);
-    }
-    mat4.multiply(lightViewProjMatrix, lightProjectionMatrix, lightViewMatrix);
-
     // Setup dat.GUI
     const settings = {
-        speed: 1.0,
+        lightAngle: 45.0,
     };
     const gui = new dat.GUI({ autoPlace: false });
-    gui.add(settings, 'speed', 0.0, 5.0).name('Rotation Speed');
+    gui.add(settings, 'lightAngle', 0.0, 360.0).name('Light Angle');
 
     // Append GUI to sample controls
     const controlsContainer = document.querySelector('.sample-controls');
@@ -374,8 +353,38 @@ const init = async () => {
         const deltaTime = now - previousTime;
         previousTime = now;
 
-        currentAngle += deltaTime * settings.speed;
+        currentAngle += deltaTime;
 
+        // ライトの行列計算
+        const lightProjectionMatrix = mat4.create();
+        const lightViewMatrix = mat4.create();
+        const lightViewProjMatrix = mat4.create();
+        const lightDir = vec3.create();
+        vec3.set(lightDir, Math.cos(settings.lightAngle * Math.PI / 180), 1, Math.sin(settings.lightAngle * Math.PI / 180));
+        vec3.normalize(lightDir, lightDir);
+        {
+            const left = -2;
+            const right = 2;
+            const bottom = -2;
+            const top = 2;
+            const near = -20;
+            const far = 20;
+            mat4.ortho(lightProjectionMatrix, left, right, bottom, top, near, far);
+        }
+        {
+            const center = vec3.create();
+            vec3.set(center, 0, 0, 0);
+            const eye = vec3.create();
+            const lightDirTmp = vec3.create();
+            vec3.scale(lightDirTmp, lightDir, 5);
+            vec3.sub(eye, lightDirTmp, center);
+            const up = vec3.create();
+            vec3.set(up, 0, 1, 0);
+            mat4.lookAt(lightViewMatrix, eye, center, up);
+        }
+        mat4.multiply(lightViewProjMatrix, lightProjectionMatrix, lightViewMatrix);
+
+        // モデル行列の計算
         const modelMatrixTorus = mat4.create();
         const modelMatrixQuad = mat4.create();
         // Reset and rotate model matrix
@@ -386,7 +395,6 @@ const init = async () => {
             quat.rotateZ(rot, rot, currentAngle);
             mat4.fromRotationTranslationScale(modelMatrixTorus, rot, [0, 0, 0], [0.5, 0.5, 0.5]);
         }
-
         mat4.identity(modelMatrixQuad);
         {
             const rot = quat.create();
@@ -399,8 +407,8 @@ const init = async () => {
         var lightViewProjMatrixArray = new Float32Array(lightViewProjMatrix);
         device.queue.writeBuffer(sceneUniformBuffer, 0, lightViewProjMatrixArray.buffer, lightViewProjMatrixArray.byteOffset, lightViewProjMatrixArray.byteLength);
         device.queue.writeBuffer(sceneUniformBuffer, 64, cameraViewProjMatrixArray.buffer, cameraViewProjMatrixArray.byteOffset, cameraViewProjMatrixArray.byteLength);
-        var lightPositionArray = new Float32Array(lightPosition);
-        device.queue.writeBuffer(sceneUniformBuffer, 128, lightPositionArray.buffer, lightPositionArray.byteOffset, lightPositionArray.byteLength);
+        var lightDirArray = new Float32Array(lightDir);
+        device.queue.writeBuffer(sceneUniformBuffer, 128, lightDirArray.buffer, lightDirArray.byteOffset, lightDirArray.byteLength);
 
         var modelMatrixTorusArray = new Float32Array(modelMatrixTorus);
         device.queue.writeBuffer(torusModelUniformBuffer, 0, modelMatrixTorusArray.buffer, modelMatrixTorusArray.byteOffset, modelMatrixTorusArray.byteLength);

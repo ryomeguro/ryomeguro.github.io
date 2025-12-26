@@ -1,7 +1,7 @@
 struct Scene {
     lightViewProjMatrix: mat4x4f,
     cameraViewProjMatrix: mat4x4f,
-    lightPos: vec4f,
+    lightDir: vec4f,
 }
 struct Model {
     modelMatrix: mat4x4f,
