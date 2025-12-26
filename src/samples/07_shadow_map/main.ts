@@ -301,7 +301,7 @@ const init = async () => {
 
     // Setup projection matrix
     const aspect = canvas.width / canvas.height;
-    const fov = (45 * Math.PI) / 180;
+    const fov = (30 * Math.PI) / 180;
     const near = 0.1;
     const far = 100.0;
     mat4.perspective(cameraProjectionMatrix, fov, aspect, near, far);

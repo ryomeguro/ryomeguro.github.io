@@ -44,19 +44,10 @@ fn vs_main(@location(0) position: vec3f, @location(1) normal: vec3f) -> VertexOu
 
 @fragment
 fn fs_main(input: VertexOutput) -> @location(0) vec4f {
-    var visibility = 0.0;
-    let oneOverShadowDepthTextureSize = 1.0 / shadowDepthTextureSize;
-    for (var y = -1; y <= 1; y++) {
-        for (var x = -1; x <= 1; x++) {
-            let offset = vec2f(vec2(x, y)) * oneOverShadowDepthTextureSize;
-
-            visibility += textureSampleCompare(
-                shadowMap, shadowSampler,
-                input.shadowPos.xy + offset, input.shadowPos.z - 0.001
-            );
-        }
-    }
-    visibility /= 9.0;
+    var visibility = textureSampleCompare(
+        shadowMap, shadowSampler,
+        input.shadowPos.xy, input.shadowPos.z - 0.001
+    );
 
     // Phong shading
     let lightDir = normalize(scene.lightPos.xyz);
