@@ -201,12 +201,7 @@ const init = async () => {
     //     vertex: {
     //         module: texturePreviewShaderModule,
     //         entryPoint: 'vs_main',
-    //         buffers: [{
-    //             arrayStride: quad.vertexSize,
-    //             attributes: [
-    //                 { shaderLocation: 0, offset: quad.positionOffset, format: 'float32x3' }
-    //             ],
-    //         }],
+    //         buffers: vertexBufferLayouts,
     //     },
     //     fragment: {
     //         module: texturePreviewShaderModule,
@@ -216,12 +211,7 @@ const init = async () => {
     //     primitive: {
     //         topology: 'triangle-list',
     //         cullMode: 'back',
-    //     },
-    //     depthStencil: {
-    //         depthWriteEnabled: true,
-    //         depthCompare: 'less',
-    //         format: 'depth24plus',
-    //     },
+    //     }
     // });
 
     const shadowMapTexture = device.createTexture({
@@ -393,7 +383,10 @@ const init = async () => {
         }
         mat4.identity(modelMatrixQuad);
         {
+            const rot = quat.identity();
+            quat.rotateX(rot, -Math.PI * 0.5, rot);
             mat4.translate(modelMatrixQuad, [0, -1, 0], modelMatrixQuad);
+            mat4.multiply(modelMatrixQuad, mat4.fromQuat(rot), modelMatrixQuad);
             mat4.scale(modelMatrixQuad, [5.0, 5.0, 5.0], modelMatrixQuad);
         }
 
@@ -459,6 +452,26 @@ const init = async () => {
 
             renderPass.end();
         }
+
+        // テクスチャのプレビュー
+        // {
+        //     const renderPass = commandEncoder.beginRenderPass({
+        //         label: 'Texture Preview Render Pass',
+        //         colorAttachments: [{
+        //             view: textureView,
+        //             loadOp: 'load',
+        //             storeOp: 'store',
+        //         }],
+        //     });
+
+        //     renderPass.setPipeline(texturePreviewPipeline);
+        //     renderPass.setVertexBuffer(0, quadVertexBuffer);
+        //     renderPass.setIndexBuffer(quadIndexBuffer, 'uint16');
+        //     // bindgroup
+        //     renderPass.drawIndexed(quad.indices.length);
+
+        //     renderPass.end();
+        // }
 
         device.queue.submit([commandEncoder.finish()]);
         requestAnimationFrame(frame);

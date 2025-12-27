@@ -5,12 +5,12 @@ export const vertexCount = 4;
 
 export const vertices = new Float32Array([
     // position (3), normal (3)
-    -1, 0, -1, 0, 1, 0,
-    1, 0, -1, 0, 1, 0,
-    1, 0, 1, 0, 1, 0,
-    -1, 0, 1, 0, 1, 0,
+    -1, -1, 0, 0, 0, 1,
+    1, -1, 0, 0, 0, 1,
+    1, 1, 0, 0, 0, 1,
+    -1, 1, 0, 0, 0, 1,
 ]);
 
 export const indices = new Uint16Array([
-    0, 2, 1, 0, 3, 2,
+    0, 1, 2, 0, 2, 3,
 ]);
