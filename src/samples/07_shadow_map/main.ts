@@ -1,6 +1,6 @@
 import materialShaderCode from './shader.wgsl?raw';
 import shadowMapShaderCode from './shadowMap.wgsl?raw';
-import texturePreviewShaderCode from './texturePreview.wgsl?raw';
+import texturePreviewShaderCode from './texturePreView.wgsl?raw';
 import { mat4, quat, vec3 } from 'wgpu-matrix';
 import * as dat from 'dat.gui';
 
@@ -109,6 +109,26 @@ const init = async () => {
         ],
     });
 
+    // テクスチャプレビューに関する情報を入れるレイアウト
+    const texturePreviewBindGroupLayout = device.createBindGroupLayout({
+        entries: [
+            {
+                binding: 0,
+                visibility: GPUShaderStage.FRAGMENT,
+                texture: {
+                    sampleType: 'depth',
+                },
+            },
+            {
+                binding: 1,
+                visibility: GPUShaderStage.FRAGMENT,
+                sampler: {
+                    type: 'non-filtering', // デプスを参照する場合はnon-filteringにする必要がある
+                },
+            },
+        ],
+    });
+
     // プリミティブの設定
     // 全て同じなのでここで定義しておく
     const primitive: GPUPrimitiveState = {
@@ -196,23 +216,27 @@ const init = async () => {
         },
     });
 
-    // const texturePreviewPipeline = device.createRenderPipeline({
-    //     layout: 'auto',
-    //     vertex: {
-    //         module: texturePreviewShaderModule,
-    //         entryPoint: 'vs_main',
-    //         buffers: vertexBufferLayouts,
-    //     },
-    //     fragment: {
-    //         module: texturePreviewShaderModule,
-    //         entryPoint: 'fs_main',
-    //         targets: [{ format }],
-    //     },
-    //     primitive: {
-    //         topology: 'triangle-list',
-    //         cullMode: 'back',
-    //     }
-    // });
+    const texturePreviewPipeline = device.createRenderPipeline({
+        layout: device.createPipelineLayout({
+            bindGroupLayouts: [
+                texturePreviewBindGroupLayout,
+            ],
+        }),
+        vertex: {
+            module: texturePreviewShaderModule,
+            entryPoint: 'vs_main',
+            buffers: vertexBufferLayouts,
+        },
+        fragment: {
+            module: texturePreviewShaderModule,
+            entryPoint: 'fs_main',
+            targets: [{ format }],
+        },
+        primitive: {
+            topology: 'triangle-list',
+            cullMode: 'back',
+        }
+    });
 
     const shadowMapTexture = device.createTexture({
         size: [1024, 1024],
@@ -282,6 +306,25 @@ const init = async () => {
             depthLoadOp: 'clear',
             depthClearValue: 1.0,
         },
+    };
+
+    const texturePreviewBindGroup = device.createBindGroup({
+        layout: texturePreviewBindGroupLayout,
+        entries: [
+            { binding: 0, resource: shadowMapTextureView },
+            {
+                binding: 1, resource: device.createSampler({})
+            }
+        ],
+    });
+
+    const texturePreviewPassDescriptor: GPURenderPassDescriptor = {
+        label: 'Texture Preview Render Pass',
+        colorAttachments: [{
+            view: undefined as any, // ここは後で入れるので仮置き
+            loadOp: 'load',
+            storeOp: 'store',
+        }],
     };
 
     // カメラの行列計算
@@ -454,24 +497,20 @@ const init = async () => {
         }
 
         // テクスチャのプレビュー
-        // {
-        //     const renderPass = commandEncoder.beginRenderPass({
-        //         label: 'Texture Preview Render Pass',
-        //         colorAttachments: [{
-        //             view: textureView,
-        //             loadOp: 'load',
-        //             storeOp: 'store',
-        //         }],
-        //     });
+        {
+            (texturePreviewPassDescriptor.colorAttachments as GPURenderPassColorAttachment[])[0].view = context.getCurrentTexture().createView();
+            const renderPass = commandEncoder.beginRenderPass(texturePreviewPassDescriptor);
 
-        //     renderPass.setPipeline(texturePreviewPipeline);
-        //     renderPass.setVertexBuffer(0, quadVertexBuffer);
-        //     renderPass.setIndexBuffer(quadIndexBuffer, 'uint16');
-        //     // bindgroup
-        //     renderPass.drawIndexed(quad.indices.length);
+            renderPass.setViewport(0, 0, 256, 256, 0, 1);
 
-        //     renderPass.end();
-        // }
+            renderPass.setPipeline(texturePreviewPipeline);
+            renderPass.setVertexBuffer(0, quadVertexBuffer);
+            renderPass.setIndexBuffer(quadIndexBuffer, 'uint16');
+            renderPass.setBindGroup(0, texturePreviewBindGroup);
+            renderPass.drawIndexed(quad.indices.length);
+
+            renderPass.end();
+        }
 
         device.queue.submit([commandEncoder.finish()]);
         requestAnimationFrame(frame);
