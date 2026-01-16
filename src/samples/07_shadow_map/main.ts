@@ -3,6 +3,7 @@ import shadowMapShaderCode from './shadowMap.wgsl?raw';
 import { TextureDepthPreview } from './textureDepthPreview';
 import { mat4, quat, vec3 } from 'wgpu-matrix';
 import * as dat from 'dat.gui';
+import Stats from 'stats.js';
 
 import * as torus from './torus';
 import * as quad from './quad';
@@ -251,6 +252,24 @@ const init = async () => {
     gui.add(settings, 'lightAngle', 0.0, 360.0).name('Light Angle');
     gui.add(settings, 'isPreviewShadowMap').name('Preview Shadow Map');
 
+    // Setup Stats
+    const stats = new Stats();
+    stats.showPanel(0); // 0: fps, 1: ms, 2: mb, 3+: custom
+
+    if (canvas.parentElement) {
+        const wrapper = document.createElement('div');
+        wrapper.style.position = 'relative';
+        wrapper.style.lineHeight = '0'; // Fixes potential whitespace issue
+        canvas.parentElement.insertBefore(wrapper, canvas);
+        wrapper.appendChild(canvas);
+        wrapper.appendChild(stats.dom);
+        stats.dom.style.position = 'absolute';
+        stats.dom.style.left = '0px';
+        stats.dom.style.top = '0px';
+    } else {
+        document.body.appendChild(stats.dom);
+    }
+
     // Append GUI to sample controls
     const controlsContainer = document.querySelector('.sample-controls');
     if (controlsContainer) {
@@ -276,6 +295,7 @@ const init = async () => {
     let currentAngle = previousTime; // Start with current time to match previous behavior roughly, or 0
 
     function frame() {
+        stats.begin();
         const now = Date.now() / 1000;
         const deltaTime = now - previousTime;
         previousTime = now;
@@ -402,6 +422,7 @@ const init = async () => {
         }
 
         device.queue.submit([commandEncoder.finish()]);
+        stats.end();
         requestAnimationFrame(frame);
     }
 
