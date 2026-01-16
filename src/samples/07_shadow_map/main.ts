@@ -1,6 +1,6 @@
 import materialShaderCode from './shader.wgsl?raw';
 import shadowMapShaderCode from './shadowMap.wgsl?raw';
-import texturePreviewShaderCode from './texturePreView.wgsl?raw';
+import { TextureDepthPreview } from './textureDepthPreview';
 import { mat4, quat, vec3 } from 'wgpu-matrix';
 import * as dat from 'dat.gui';
 
@@ -64,10 +64,6 @@ const init = async () => {
         code: shadowMapShaderCode,
     });
 
-    const texturePreviewShaderModule = device.createShaderModule({
-        code: texturePreviewShaderCode,
-    });
-
     // uniformを1つ入れるレイアウトの作成
     const uniformBufferBindGroupLayout = device.createBindGroupLayout({
         label: 'Uniform Buffer Bind Group Layout',
@@ -104,26 +100,6 @@ const init = async () => {
                 visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
                 sampler: {
                     type: 'comparison',
-                },
-            },
-        ],
-    });
-
-    // テクスチャプレビューに関する情報を入れるレイアウト
-    const texturePreviewBindGroupLayout = device.createBindGroupLayout({
-        entries: [
-            {
-                binding: 0,
-                visibility: GPUShaderStage.FRAGMENT,
-                texture: {
-                    sampleType: 'depth',
-                },
-            },
-            {
-                binding: 1,
-                visibility: GPUShaderStage.FRAGMENT,
-                sampler: {
-                    type: 'non-filtering', // デプスを参照する場合はnon-filteringにする必要がある
                 },
             },
         ],
@@ -216,28 +192,6 @@ const init = async () => {
         },
     });
 
-    const texturePreviewPipeline = device.createRenderPipeline({
-        layout: device.createPipelineLayout({
-            bindGroupLayouts: [
-                texturePreviewBindGroupLayout,
-            ],
-        }),
-        vertex: {
-            module: texturePreviewShaderModule,
-            entryPoint: 'vs_main',
-            buffers: vertexBufferLayouts,
-        },
-        fragment: {
-            module: texturePreviewShaderModule,
-            entryPoint: 'fs_main',
-            targets: [{ format }],
-        },
-        primitive: {
-            topology: 'triangle-list',
-            cullMode: 'back',
-        }
-    });
-
     const shadowMapTexture = device.createTexture({
         size: [1024, 1024],
         format: 'depth24plus',
@@ -308,24 +262,8 @@ const init = async () => {
         },
     };
 
-    const texturePreviewBindGroup = device.createBindGroup({
-        layout: texturePreviewBindGroupLayout,
-        entries: [
-            { binding: 0, resource: shadowMapTextureView },
-            {
-                binding: 1, resource: device.createSampler({})
-            }
-        ],
-    });
-
-    const texturePreviewPassDescriptor: GPURenderPassDescriptor = {
-        label: 'Texture Preview Render Pass',
-        colorAttachments: [{
-            view: undefined as any, // ここは後で入れるので仮置き
-            loadOp: 'load',
-            storeOp: 'store',
-        }],
-    };
+    const texturePreview = new TextureDepthPreview(shadowMapTextureView, device, format);
+    texturePreview.setViewPort(0, 0, 256, 256);
 
     // カメラの行列計算
 
@@ -347,9 +285,11 @@ const init = async () => {
     // Setup dat.GUI
     const settings = {
         lightAngle: 45.0,
+        isPreviewShadowMap: true
     };
     const gui = new dat.GUI({ autoPlace: false });
     gui.add(settings, 'lightAngle', 0.0, 360.0).name('Light Angle');
+    gui.add(settings, 'isPreviewShadowMap').name('Preview Shadow Map');
 
     // Append GUI to sample controls
     const controlsContainer = document.querySelector('.sample-controls');
@@ -497,19 +437,8 @@ const init = async () => {
         }
 
         // テクスチャのプレビュー
-        {
-            (texturePreviewPassDescriptor.colorAttachments as GPURenderPassColorAttachment[])[0].view = context.getCurrentTexture().createView();
-            const renderPass = commandEncoder.beginRenderPass(texturePreviewPassDescriptor);
-
-            renderPass.setViewport(0, 0, 256, 256, 0, 1);
-
-            renderPass.setPipeline(texturePreviewPipeline);
-            renderPass.setVertexBuffer(0, quadVertexBuffer);
-            renderPass.setIndexBuffer(quadIndexBuffer, 'uint16');
-            renderPass.setBindGroup(0, texturePreviewBindGroup);
-            renderPass.drawIndexed(quad.indices.length);
-
-            renderPass.end();
+        if (settings.isPreviewShadowMap) {
+            texturePreview.draw(commandEncoder, context);
         }
 
         device.queue.submit([commandEncoder.finish()]);
