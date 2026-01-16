@@ -14,21 +14,21 @@ export class Torus {
         // 頂点, インデックスデータの作成
         const ringSegments = 32;
         const tubeSegments = 32;
-        const torusData = this.createTorus(ringSegments, tubeSegments, 1.0, 0.4);
+        const modelData = this.createModelData(ringSegments, tubeSegments, 1.0, 0.4);
 
         // 頂点バッファの作成
         this.vertexBuffer = device.createBuffer({
-            size: torusData.vertices.byteLength,
+            size: modelData.vertices.byteLength,
             usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
         });
-        device.queue.writeBuffer(this.vertexBuffer, 0, torusData.vertices);
+        device.queue.writeBuffer(this.vertexBuffer, 0, modelData.vertices);
 
         // インデックスバッファの作成
         this.indexBuffer = device.createBuffer({
-            size: torusData.indices.byteLength,
+            size: modelData.indices.byteLength,
             usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST,
         });
-        device.queue.writeBuffer(this.indexBuffer, 0, torusData.indices);
+        device.queue.writeBuffer(this.indexBuffer, 0, modelData.indices);
 
         // 頂点バッファのレイアウト
         const vertexSize = 6 * 4; // 4(float32) * 6(position + normal)
@@ -44,7 +44,7 @@ export class Torus {
             },
         ];
 
-        this.indexCount = torusData.indices.length;
+        this.indexCount = modelData.indices.length;
     }
 
     getIndexCount(): number {
@@ -63,7 +63,7 @@ export class Torus {
         return this.indexBuffer;
     }
 
-    private createTorus(ringSegments = 8, tubeSegments = 8, R = 1.0, r = 0.4) {
+    private createModelData(ringSegments = 8, tubeSegments = 8, R = 1.0, r = 0.4) {
         const vertices = [];
         const indices = [];
 

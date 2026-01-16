@@ -11,10 +11,9 @@ export class TextureDepthPreview {
     private shaderModule: GPUShaderModule;
     private bindGroup: GPUBindGroup;
     private pipeline: GPURenderPipeline;
-    private vertexBuffer: GPUBuffer;
-    private indexBuffer: GPUBuffer;
     private viewPort: { x: number, y: number, width: number, height: number };
     private texturePreviewPassDescriptor: GPURenderPassDescriptor;
+    private quadModel: quad.Quad;
 
     constructor(textureView: GPUTextureView, device: GPUDevice, format: GPUTextureFormat) {
         // シェーダモジュールの作成
@@ -42,16 +41,7 @@ export class TextureDepthPreview {
             ],
         });
 
-        // 頂点バッファのレイアウト
-        const vertexBufferLayouts: Iterable<GPUVertexBufferLayout> = [
-            {
-                arrayStride: quad.vertexSize,
-                attributes: [
-                    { shaderLocation: 0, offset: quad.positionOffset, format: 'float32x3' },
-                    { shaderLocation: 1, offset: quad.normalOffset, format: 'float32x3' },
-                ],
-            },
-        ];
+        this.quadModel = new quad.Quad(device);
 
         // レンダリングパイプラインの作成
         this.pipeline = device.createRenderPipeline({
@@ -63,7 +53,7 @@ export class TextureDepthPreview {
             vertex: {
                 module: this.shaderModule,
                 entryPoint: 'vs_main',
-                buffers: vertexBufferLayouts,
+                buffers: this.quadModel.getVertexBufferLayouts(),
             },
             fragment: {
                 module: this.shaderModule,
@@ -101,19 +91,6 @@ export class TextureDepthPreview {
             }],
         };
 
-        // 板ポリのバッファ作成
-        this.vertexBuffer = device.createBuffer({
-            size: quad.vertices.byteLength,
-            usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
-        });
-        device.queue.writeBuffer(this.vertexBuffer, 0, quad.vertices);
-
-        this.indexBuffer = device.createBuffer({
-            size: quad.indices.byteLength,
-            usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST,
-        });
-        device.queue.writeBuffer(this.indexBuffer, 0, quad.indices);
-
         // ビューポートの初期化
         this.viewPort = { x: 0, y: 0, width: 256, height: 256 };
     }
@@ -129,9 +106,9 @@ export class TextureDepthPreview {
         renderPass.setViewport(this.viewPort.x, this.viewPort.y, this.viewPort.width, this.viewPort.height, 0, 1);
         renderPass.setPipeline(this.pipeline);
         renderPass.setBindGroup(0, this.bindGroup);
-        renderPass.setVertexBuffer(0, this.vertexBuffer);
-        renderPass.setIndexBuffer(this.indexBuffer, 'uint16');
-        renderPass.drawIndexed(quad.indices.length);
+        renderPass.setVertexBuffer(0, this.quadModel.getVertexBuffer());
+        renderPass.setIndexBuffer(this.quadModel.getIndexBuffer(), 'uint16');
+        renderPass.drawIndexed(this.quadModel.getIndexCount());
 
         renderPass.end();
     }

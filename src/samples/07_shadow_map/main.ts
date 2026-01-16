@@ -19,19 +19,7 @@ const init = async () => {
     context.configure({ device, format, alphaMode: 'premultiplied' });
 
     const torusModel = new torus.Torus(device);
-
-    // 板ポリのバッファ作成
-    const quadVertexBuffer = device.createBuffer({
-        size: quad.vertices.byteLength,
-        usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
-    });
-    device.queue.writeBuffer(quadVertexBuffer, 0, quad.vertices);
-
-    const quadIndexBuffer = device.createBuffer({
-        size: quad.indices.byteLength,
-        usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST,
-    });
-    device.queue.writeBuffer(quadIndexBuffer, 0, quad.indices);
+    const quadModel = new quad.Quad(device);
 
     // シェーダモジュール作成
     const materialShaderModule = device.createShaderModule({
@@ -127,13 +115,7 @@ const init = async () => {
         vertex: {
             module: materialShaderModule,
             entryPoint: 'vs_main',
-            buffers: [{
-                arrayStride: quad.vertexSize,
-                attributes: [
-                    { shaderLocation: 0, offset: quad.positionOffset, format: 'float32x3' },
-                    { shaderLocation: 1, offset: quad.normalOffset, format: 'float32x3' },
-                ],
-            }],
+            buffers: quadModel.getVertexBufferLayouts(),
         },
         fragment: {
             module: materialShaderModule,
@@ -405,11 +387,11 @@ const init = async () => {
 
             // Quadの描画
             renderPass.setPipeline(quadPipeline);
-            renderPass.setVertexBuffer(0, quadVertexBuffer);
-            renderPass.setIndexBuffer(quadIndexBuffer, 'uint16');
+            renderPass.setVertexBuffer(0, quadModel.getVertexBuffer());
+            renderPass.setIndexBuffer(quadModel.getIndexBuffer(), 'uint16');
             renderPass.setBindGroup(0, sceneBindGroupForRender);
             renderPass.setBindGroup(1, modelBindGroupForQuad);
-            renderPass.drawIndexed(quad.indices.length);
+            renderPass.drawIndexed(quadModel.getIndexCount());
 
             renderPass.end();
         }
