@@ -18,18 +18,7 @@ const init = async () => {
     const format = navigator.gpu.getPreferredCanvasFormat();
     context.configure({ device, format, alphaMode: 'premultiplied' });
 
-    // トーラスのバッファ作成
-    const torusVertexBuffer = device.createBuffer({
-        size: torus.vertices.byteLength,
-        usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
-    });
-    device.queue.writeBuffer(torusVertexBuffer, 0, torus.vertices);
-
-    const torusIndexBuffer = device.createBuffer({
-        size: torus.indices.byteLength,
-        usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST,
-    });
-    device.queue.writeBuffer(torusIndexBuffer, 0, torus.indices);
+    const torusModel = new torus.Torus(device);
 
     // 板ポリのバッファ作成
     const quadVertexBuffer = device.createBuffer({
@@ -43,17 +32,6 @@ const init = async () => {
         usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST,
     });
     device.queue.writeBuffer(quadIndexBuffer, 0, quad.indices);
-
-    // 頂点バッファのレイアウト
-    const vertexBufferLayouts: Iterable<GPUVertexBufferLayout> = [
-        {
-            arrayStride: torus.vertexSize,
-            attributes: [
-                { shaderLocation: 0, offset: torus.positionOffset, format: 'float32x3' },
-                { shaderLocation: 1, offset: torus.normalOffset, format: 'float32x3' },
-            ],
-        },
-    ];
 
     // シェーダモジュール作成
     const materialShaderModule = device.createShaderModule({
@@ -123,7 +101,7 @@ const init = async () => {
         vertex: {
             module: materialShaderModule,
             entryPoint: 'vs_main',
-            buffers: vertexBufferLayouts,
+            buffers: torusModel.getVertexBufferLayouts(),
         },
         fragment: {
             module: materialShaderModule,
@@ -182,7 +160,7 @@ const init = async () => {
         vertex: {
             module: shadowMapShaderModule,
             entryPoint: 'vs_main',
-            buffers: vertexBufferLayouts,
+            buffers: torusModel.getVertexBufferLayouts(),
         },
         primitive,
         depthStencil: {
@@ -390,11 +368,11 @@ const init = async () => {
             const renderPass = commandEncoder.beginRenderPass(shadowPassDescriptor);
 
             renderPass.setPipeline(shadowMapPipeline);
-            renderPass.setVertexBuffer(0, torusVertexBuffer);
-            renderPass.setIndexBuffer(torusIndexBuffer, 'uint16');
+            renderPass.setVertexBuffer(0, torusModel.getVertexBuffer());
+            renderPass.setIndexBuffer(torusModel.getIndexBuffer(), 'uint16');
             renderPass.setBindGroup(0, sceneBindGroupForShadowMap);
             renderPass.setBindGroup(1, modelBindGroupForTorus);
-            renderPass.drawIndexed(torus.indices.length);
+            renderPass.drawIndexed(torusModel.getIndexCount());
 
             renderPass.end();
         }
@@ -419,11 +397,11 @@ const init = async () => {
 
             // Torusの描画
             renderPass.setPipeline(torusPipeline);
-            renderPass.setVertexBuffer(0, torusVertexBuffer);
-            renderPass.setIndexBuffer(torusIndexBuffer, 'uint16');
+            renderPass.setVertexBuffer(0, torusModel.getVertexBuffer());
+            renderPass.setIndexBuffer(torusModel.getIndexBuffer(), 'uint16');
             renderPass.setBindGroup(0, sceneBindGroupForRender);
             renderPass.setBindGroup(1, modelBindGroupForTorus);
-            renderPass.drawIndexed(torus.indices.length);
+            renderPass.drawIndexed(torusModel.getIndexCount());
 
             // Quadの描画
             renderPass.setPipeline(quadPipeline);
