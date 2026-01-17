@@ -2,7 +2,7 @@ import materialShaderCode from './shader.wgsl?raw';
 import shadowMapShaderCode from './shadowMap.wgsl?raw';
 import { TextureDepthPreview } from './textureDepthPreview';
 import { mat4, quat, vec3 } from 'wgpu-matrix';
-import * as dat from 'dat.gui';
+import { GuiManager } from './GuiManager';
 import { PerformanceVisualizer } from './PerformanceVisualizer';
 
 import * as torus from './torus';
@@ -245,36 +245,13 @@ const init = async () => {
 
     // Setup dat.GUI
     const settings = {
-        lightAngle: 45.0,
-        isPreviewShadowMap: true
+        lightAngle: { value: 45.0, label: 'Light Angle', min: 0.0, max: 360.0 },
+        isPreviewShadowMap: { value: true, label: 'Preview Shadow Map' },
     };
-    const gui = new dat.GUI({ autoPlace: false });
-    gui.add(settings, 'lightAngle', 0.0, 360.0).name('Light Angle');
-    gui.add(settings, 'isPreviewShadowMap').name('Preview Shadow Map');
+    const guiManager = new GuiManager(settings);
 
     // Setup Stats
     const performanceVisualizer = new PerformanceVisualizer(canvas);
-
-    // Append GUI to sample controls
-    const controlsContainer = document.querySelector('.sample-controls');
-    if (controlsContainer) {
-        controlsContainer.appendChild(gui.domElement);
-    } else {
-        // Fallback or create if not exists (though navigation.ts should have created it)
-        const header = document.querySelector('.sample-header');
-        if (header) {
-            const controls = document.createElement('div');
-            controls.className = 'sample-controls';
-            header.appendChild(controls);
-            controls.appendChild(gui.domElement);
-        } else {
-            // Absolute fallback if no header
-            document.body.appendChild(gui.domElement);
-            gui.domElement.style.position = 'absolute';
-            gui.domElement.style.top = '10px';
-            gui.domElement.style.right = '10px';
-        }
-    }
 
     let previousTime = Date.now() / 1000;
     let currentAngle = previousTime; // Start with current time to match previous behavior roughly, or 0
@@ -288,7 +265,7 @@ const init = async () => {
         currentAngle += deltaTime;
 
         // ライトの行列計算
-        const lightDir = vec3.set(Math.cos(settings.lightAngle * Math.PI / 180), 1, Math.sin(settings.lightAngle * Math.PI / 180));
+        const lightDir = vec3.set(Math.cos(guiManager.values.lightAngle * Math.PI / 180), 1, Math.sin(guiManager.values.lightAngle * Math.PI / 180));
         vec3.normalize(lightDir, lightDir);
 
         const lightProjectionMatrix = mat4.create();
@@ -402,7 +379,7 @@ const init = async () => {
         }
 
         // テクスチャのプレビュー
-        if (settings.isPreviewShadowMap) {
+        if (guiManager.values.isPreviewShadowMap) {
             texturePreview.draw(commandEncoder, context);
         }
 
