@@ -1,5 +1,5 @@
-import materialShaderCode from './shader.wgsl?raw';
-import ggxShaderCode from './shader_ggx_instancing.wgsl?raw';
+import materialPhongShaderCode from './shader_phong.wgsl?raw';
+import materialGgxShaderCode from './shader_ggx_instancing.wgsl?raw';
 import shadowMapShaderCode from './shadowMap.wgsl?raw';
 import { TextureDepthPreview } from './textureDepthPreview';
 import { mat4, quat, vec3 } from 'wgpu-matrix';
@@ -24,12 +24,12 @@ const init = async () => {
     const quadModel = new quad.Quad(device);
 
     // シェーダモジュール作成
-    const materialShaderModule = device.createShaderModule({
-        code: materialShaderCode,
+    const materialPhongShaderModule = device.createShaderModule({
+        code: materialPhongShaderCode,
     });
 
-    const ggxShaderModule = device.createShaderModule({
-        code: ggxShaderCode,
+    const materialGgxShaderModule = device.createShaderModule({
+        code: materialGgxShaderCode,
     });
 
     const shadowMapShaderModule = device.createShaderModule({
@@ -93,12 +93,12 @@ const init = async () => {
             ],
         }),
         vertex: {
-            module: ggxShaderModule,
+            module: materialGgxShaderModule,
             entryPoint: 'vs_main',
             buffers: shaderBallModel.getVertexBufferLayouts(),
         },
         fragment: {
-            module: ggxShaderModule,
+            module: materialGgxShaderModule,
             entryPoint: 'fs_main',
             targets: [{ format }],
         },
@@ -119,12 +119,12 @@ const init = async () => {
             ],
         }),
         vertex: {
-            module: materialShaderModule,
+            module: materialPhongShaderModule,
             entryPoint: 'vs_main',
             buffers: quadModel.getVertexBufferLayouts(),
         },
         fragment: {
-            module: materialShaderModule,
+            module: materialPhongShaderModule,
             entryPoint: 'fs_main',
             targets: [{ format }],
         },
