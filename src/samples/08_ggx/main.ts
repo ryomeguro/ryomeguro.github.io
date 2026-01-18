@@ -1,4 +1,5 @@
 import materialShaderCode from './shader.wgsl?raw';
+import ggxShaderCode from './shader_ggx_instancing.wgsl?raw';
 import shadowMapShaderCode from './shadowMap.wgsl?raw';
 import { TextureDepthPreview } from './textureDepthPreview';
 import { mat4, quat, vec3 } from 'wgpu-matrix';
@@ -25,6 +26,10 @@ const init = async () => {
     // シェーダモジュール作成
     const materialShaderModule = device.createShaderModule({
         code: materialShaderCode,
+    });
+
+    const ggxShaderModule = device.createShaderModule({
+        code: ggxShaderCode,
     });
 
     const shadowMapShaderModule = device.createShaderModule({
@@ -88,12 +93,12 @@ const init = async () => {
             ],
         }),
         vertex: {
-            module: materialShaderModule,
+            module: ggxShaderModule,
             entryPoint: 'vs_main',
             buffers: shaderBallModel.getVertexBufferLayouts(),
         },
         fragment: {
-            module: materialShaderModule,
+            module: ggxShaderModule,
             entryPoint: 'fs_main',
             targets: [{ format }],
         },
@@ -168,8 +173,10 @@ const init = async () => {
 
     const matrixSize = 4 * 16; // 4x4 matrix
 
+    const shaderBallColNum = 10;
+    const shaderBallRowNum = 10;
     const shaderBallModelUniformBuffer = device.createBuffer({
-        size: matrixSize,
+        size: (matrixSize + 4 * 4) * shaderBallColNum * shaderBallRowNum,
         usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     });
     const quadModelUniformBuffer = device.createBuffer({
@@ -180,6 +187,19 @@ const init = async () => {
         size: 2 * 4 * 16 + 4 * 4,
         usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     });
+
+    for (let x = 0; x < shaderBallColNum; x++) {
+        for (let z = 0; z < shaderBallRowNum; z++) {
+            const modelMatrix = mat4.create();
+            mat4.identity(modelMatrix);
+            mat4.translate(modelMatrix, [(x - 4.5) * 0.4, -1.0, (z - 4.5) * 0.4], modelMatrix);
+            mat4.scale(modelMatrix, [0.15, 0.15, 0.15], modelMatrix);
+
+            let offset = (x * shaderBallRowNum + z) * (matrixSize + 4 * 4);
+            device.queue.writeBuffer(shaderBallModelUniformBuffer, offset, modelMatrix.buffer);
+            device.queue.writeBuffer(shaderBallModelUniformBuffer, offset + matrixSize, new Float32Array([x / (shaderBallColNum - 1.0), z / (shaderBallRowNum - 1.0), 0.0, 0.0]));
+        }
+    }
 
     const modelBindGroupForShaderBall = device.createBindGroup({
         layout: uniformBufferBindGroupLayout,
@@ -230,15 +250,15 @@ const init = async () => {
 
     // Setup projection matrix
     const aspect = canvas.width / canvas.height;
-    const fov = (30 * Math.PI) / 180;
+    const fov = (20 * Math.PI) / 180;
     const near = 0.1;
     const far = 100.0;
     const cameraProjectionMatrix = mat4.perspective(fov, aspect, near, far);
 
     // Setup view matrix (camera at (0, 0, 5) looking at origin)
     const cameraViewMatrix = mat4.lookAt(
-        [0, 0, 5],  // eye position
-        [0, 0, 0],  // target position
+        [0, 3, 8],  // eye position
+        [0, -1, 0],  // target position
         [0, 1, 0],  // up vector
     );
     const cameraViewProjMatrix = mat4.multiply(cameraProjectionMatrix, cameraViewMatrix);
@@ -270,10 +290,10 @@ const init = async () => {
 
         const lightProjectionMatrix = mat4.create();
         {
-            const left = -2;
-            const right = 2;
-            const bottom = -2;
-            const top = 2;
+            const left = -3;
+            const right = 3;
+            const bottom = -3;
+            const top = 3;
             const near = -20;
             const far = 20;
             mat4.ortho(left, right, bottom, top, near, far, lightProjectionMatrix);
@@ -294,18 +314,8 @@ const init = async () => {
         const lightViewProjMatrix = mat4.multiply(lightProjectionMatrix, lightViewMatrix);
 
         // モデル行列の計算
-        const modelMatrixTorus = mat4.create();
         const modelMatrixQuad = mat4.create();
         // Reset and rotate model matrix
-        mat4.identity(modelMatrixTorus);
-        {
-            const rot = quat.identity();
-            quat.rotateX(rot, currentAngle, rot);
-            quat.rotateZ(rot, currentAngle, rot);
-            mat4.translate(modelMatrixTorus, [0, 0, 0], modelMatrixTorus);
-            mat4.multiply(modelMatrixTorus, mat4.fromQuat(rot), modelMatrixTorus);
-            mat4.scale(modelMatrixTorus, [0.5, 0.5, 0.5], modelMatrixTorus);
-        }
         mat4.identity(modelMatrixQuad);
         {
             const rot = quat.identity();
@@ -320,7 +330,6 @@ const init = async () => {
         device.queue.writeBuffer(sceneUniformBuffer, 64, cameraViewProjMatrix.buffer);
         device.queue.writeBuffer(sceneUniformBuffer, 128, lightDir.buffer);
 
-        device.queue.writeBuffer(shaderBallModelUniformBuffer, 0, modelMatrixTorus.buffer);
         device.queue.writeBuffer(quadModelUniformBuffer, 0, modelMatrixQuad.buffer);
 
         const commandEncoder = device.createCommandEncoder();
@@ -336,7 +345,7 @@ const init = async () => {
             renderPass.setIndexBuffer(shaderBallModel.getIndexBuffer(), 'uint16');
             renderPass.setBindGroup(0, sceneBindGroupForShadowMap);
             renderPass.setBindGroup(1, modelBindGroupForShaderBall);
-            renderPass.drawIndexed(shaderBallModel.getIndexCount());
+            renderPass.drawIndexed(shaderBallModel.getIndexCount(), shaderBallColNum * shaderBallRowNum);
 
             renderPass.end();
         }
@@ -365,7 +374,7 @@ const init = async () => {
             renderPass.setIndexBuffer(shaderBallModel.getIndexBuffer(), 'uint16');
             renderPass.setBindGroup(0, sceneBindGroupForRender);
             renderPass.setBindGroup(1, modelBindGroupForShaderBall);
-            renderPass.drawIndexed(shaderBallModel.getIndexCount());
+            renderPass.drawIndexed(shaderBallModel.getIndexCount(), shaderBallColNum * shaderBallRowNum);
 
             // Quadの描画
             renderPass.setPipeline(quadPipeline);
