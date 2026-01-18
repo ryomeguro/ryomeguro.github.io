@@ -294,8 +294,8 @@ const init = async () => {
             const right = 3;
             const bottom = -3;
             const top = 3;
-            const near = -20;
-            const far = 20;
+            const near = -10;
+            const far = 10;
             mat4.ortho(left, right, bottom, top, near, far, lightProjectionMatrix);
         }
 

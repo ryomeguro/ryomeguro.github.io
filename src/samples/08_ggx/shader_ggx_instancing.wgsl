@@ -56,7 +56,7 @@ fn vs_main(@location(0) position: vec3f, @location(1) normal: vec3f, @builtin(in
 fn fs_main(input: VertexOutput) -> @location(0) vec4f {
     var visibility = textureSampleCompare(
         shadowMap, shadowSampler,
-        input.shadowPos.xy, input.shadowPos.z - 0.002
+        input.shadowPos.xy, input.shadowPos.z - 0.001
     );
 
     // Phong shading
