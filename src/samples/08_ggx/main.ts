@@ -184,7 +184,7 @@ const init = async () => {
         usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     });
     const sceneUniformBuffer = device.createBuffer({
-        size: 2 * 4 * 16 + 4 * 4,
+        size: 2 * 4 * 16 + 4 * 4 + 4 * 4,
         usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     });
 
@@ -256,8 +256,9 @@ const init = async () => {
     const cameraProjectionMatrix = mat4.perspective(fov, aspect, near, far);
 
     // Setup view matrix (camera at (0, 0, 5) looking at origin)
+    const cameraPos = [0, 3, 8];
     const cameraViewMatrix = mat4.lookAt(
-        [0, 3, 8],  // eye position
+        cameraPos,  // eye position
         [0, -1, 0],  // target position
         [0, 1, 0],  // up vector
     );
@@ -329,6 +330,7 @@ const init = async () => {
         device.queue.writeBuffer(sceneUniformBuffer, 0, lightViewProjMatrix.buffer);
         device.queue.writeBuffer(sceneUniformBuffer, 64, cameraViewProjMatrix.buffer);
         device.queue.writeBuffer(sceneUniformBuffer, 128, lightDir.buffer);
+        device.queue.writeBuffer(sceneUniformBuffer, 144, (new Float32Array(cameraPos)).buffer);
 
         device.queue.writeBuffer(quadModelUniformBuffer, 0, modelMatrixQuad.buffer);
 
