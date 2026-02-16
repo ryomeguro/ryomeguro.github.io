@@ -17,12 +17,12 @@ export function initNavigation() {
             <li><a href="/src/samples/04_texturecube/index.html">Texture Cube</a></li>
             <li><a href="/src/samples/05_gltf_load/index.html">glTF Load</a></li>
             <li><a href="/src/samples/06_multi_view/index.html">Multiple Views</a></li>
+            <li><a href="/src/samples/09_threejs_webgpu/index.html">Three.js WebGPU</a></li>
         </ul>
         <h3>Rendering</h3>
         <ul>
             <li><a href="/src/samples/07_shadow_map/index.html">Shadow Map</a></li>
             <li><a href="/src/samples/08_ggx/index.html">GGX</a></li>
-            <li><a href="/src/samples/09_threejs_webgpu/index.html">Three.js WebGPU</a></li>
         </ul>
     `;
 
