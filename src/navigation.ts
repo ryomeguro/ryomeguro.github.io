@@ -22,6 +22,7 @@ export function initNavigation() {
         <ul>
             <li><a href="/src/samples/07_shadow_map/index.html">Shadow Map</a></li>
             <li><a href="/src/samples/08_ggx/index.html">GGX</a></li>
+            <li><a href="/src/samples/09_threejs_webgpu/index.html">Three.js WebGPU</a></li>
         </ul>
     `;
 

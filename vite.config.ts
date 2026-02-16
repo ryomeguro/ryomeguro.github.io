@@ -14,6 +14,7 @@ export default defineConfig({
         multi_view: resolve(__dirname, 'src/samples/06_multi_view/index.html'),
         shadow_map: resolve(__dirname, 'src/samples/07_shadow_map/index.html'),
         pbr: resolve(__dirname, 'src/samples/08_ggx/index.html'),
+        threejs_webgpu: resolve(__dirname, 'src/samples/09_threejs_webgpu/index.html'),
       },
     },
   },
