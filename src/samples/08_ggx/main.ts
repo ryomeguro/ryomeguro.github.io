@@ -248,7 +248,7 @@ const init = async () => {
     // Setup dat.GUI
     const settings = {
         lightAngle: { value: 45.0, label: 'Light Angle', min: 0.0, max: 360.0 },
-        isPreviewShadowMap: { value: true, label: 'Preview Shadow Map' },
+        previewType: { value: 0, label: 'Preview Type', options: { 'None': 0, 'Cubemap': 1, 'Shadow Map': 2 } },
     };
     const guiManager = new GuiManager(settings);
 
@@ -373,9 +373,10 @@ const init = async () => {
         }
 
         // テクスチャのプレビュー
-        if (guiManager.values.isPreviewShadowMap) {
-            // shadowMapPreview.draw(commandEncoder, context);
+        if (guiManager.values.previewType == 1) {
             cubemapPreview.draw(commandEncoder, context);
+        } else if (guiManager.values.previewType == 2) {
+            shadowMapPreview.draw(commandEncoder, context);
         }
 
         device.queue.submit([commandEncoder.finish()]);
