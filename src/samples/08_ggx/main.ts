@@ -7,6 +7,8 @@ import { GuiManager } from './Lib/GuiManager';
 import { PerformanceVisualizer } from './Lib/PerformanceVisualizer';
 import { UniformBuffer } from './Lib/UniformBuffer';
 import { createBindGroupLayout } from './Lib/BindGroupRayoutFactory'
+import { CubemapPreview } from './Lib/CubemapPreview';
+import { EquirectangularToCubemap } from './Lib/EquirectangularToCubemap';
 
 import * as ShaderBall from './ShaderBall';
 import * as quad from './Lib/quad';
@@ -21,6 +23,12 @@ const init = async () => {
     const context = canvas.getContext('webgpu')!;
     const format = navigator.gpu.getPreferredCanvasFormat();
     context.configure({ device, format, alphaMode: 'premultiplied' });
+
+    const converter = new EquirectangularToCubemap(device);
+    const cubemap = await converter.convert('/assets/img/sunny_rose_garden_2k.exr');
+
+    const cubemapPreview = new CubemapPreview(cubemap.createView(), device, format);
+    cubemapPreview.setFaceSize(0, 0, 128);
 
     const shaderBallModel = await ShaderBall.ShaderBall.create(device);
     const quadModel = new quad.Quad(device);
@@ -216,8 +224,8 @@ const init = async () => {
         },
     };
 
-    const texturePreview = new TextureDepthPreview(shadowMapTextureView, device, format);
-    texturePreview.setViewPort(0, 0, 256, 256);
+    const shadowMapPreview = new TextureDepthPreview(shadowMapTextureView, device, format);
+    shadowMapPreview.setViewPort(0, 0, 256, 256);
 
     // カメラの行列計算
 
@@ -366,7 +374,8 @@ const init = async () => {
 
         // テクスチャのプレビュー
         if (guiManager.values.isPreviewShadowMap) {
-            texturePreview.draw(commandEncoder, context);
+            // shadowMapPreview.draw(commandEncoder, context);
+            cubemapPreview.draw(commandEncoder, context);
         }
 
         device.queue.submit([commandEncoder.finish()]);
