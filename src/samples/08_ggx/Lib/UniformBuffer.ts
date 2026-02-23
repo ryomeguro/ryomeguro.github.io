@@ -57,7 +57,7 @@ export class UniformBuffer {
         });
     }
 
-    public setValue(name: string, value: number | number[] | Float32Array) {
+    public setValue(name: string, value: number | number[] | Float32Array, index?: number) {
         const member = this.members.get(name);
         if (!member) {
             throw new Error(`Uniform member ${name} not found`);
@@ -65,16 +65,23 @@ export class UniformBuffer {
 
         const data = Array.isArray(value) || value instanceof Float32Array ? value : [value];
 
-        for (let i = 0; i < member.count; ++i) {
-            const elementOffset = member.offset + (i * member.stride);
+        let count = index !== undefined ? 1 : member.count;
+
+        for (let i = 0; i < count; ++i) {
+            let elementOffset = member.offset + (i * member.stride);
+            if (index !== undefined) {
+                elementOffset += index * member.stride;
+            }
 
             if (member.type === 'f32') {
                 this.view.setFloat32(elementOffset, data[i] as number, true);
             }
             else if (member.type === 'vec3f' || member.type === 'vec4f') {
                 const startIdx = i * (member.type === 'vec3f' ? 3 : 4);
-                for (let j = 0; j < (member.type === 'vec3f' ? 3 : 4); ++j) {
-                    this.view.setFloat32(elementOffset + j * 4, data[startIdx + j] as number, true);
+                const componentCount = member.type === 'vec3f' ? 3 : 4;
+                for (let j = 0; j < componentCount; ++j) {
+                    const val = data[startIdx + j] ?? 0;
+                    this.view.setFloat32(elementOffset + j * 4, val as number, true);
                 }
             }
             else if (member.type === 'mat4f') {

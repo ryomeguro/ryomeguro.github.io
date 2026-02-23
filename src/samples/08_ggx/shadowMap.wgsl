@@ -5,14 +5,9 @@ struct Scene {
     cameraPos: vec4f,
 }
 
-struct ModelShape{
-    modelMatrix: mat4x4f,
-    roughness: f32,
-    metallic: f32,
-    padding: vec2f,
-}
 struct Model {
-    shape: array<ModelShape, 100>,
+    modelMatrix: array<mat4x4f, 100>,
+    param0: array<vec4f, 100>,
 }
 
 @group(0) @binding(0) var<uniform> scene : Scene;
@@ -25,6 +20,6 @@ struct VertexOutput {
 @vertex
 fn vs_main(@location(0) pos: vec3f, @builtin(instance_index) instanceIndex: u32) -> VertexOutput {
     var output: VertexOutput;
-    output.position = scene.lightViewProjMatrix * model.shape[instanceIndex].modelMatrix * vec4f(pos, 1.0);
+    output.position = scene.lightViewProjMatrix * model.modelMatrix[instanceIndex] * vec4f(pos, 1.0);
     return output;
 }

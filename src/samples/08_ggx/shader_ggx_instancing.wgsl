@@ -10,14 +10,9 @@ struct Scene {
     cameraPos: vec4f,
 }
 
-struct ModelShape{
-    modelMatrix: mat4x4f,
-    roughness: f32,
-    metallic: f32,
-    padding: vec2f,
-}
 struct Model {
-    shape: array<ModelShape, 100>,
+    modelMatrix: array<mat4x4f, 100>,
+    param0: array<vec4f, 100>,
 }
 
 @group(0) @binding(0) var<uniform> scene : Scene;
@@ -39,7 +34,7 @@ fn vs_main(@location(0) position: vec3f, @location(1) normal: vec3f, @builtin(in
     var output: VertexOutput;
 
     // XY is in (-1, 1) space, Z is in (0, 1) space
-    let posFromLight = scene.lightViewProjMatrix * model.shape[instanceIndex].modelMatrix * vec4f(position, 1.0);
+    let posFromLight = scene.lightViewProjMatrix * model.modelMatrix[instanceIndex] * vec4f(position, 1.0);
 
     // Convert XY to (0, 1)
     // Y is flipped because texture coords are Y-down.
@@ -48,11 +43,11 @@ fn vs_main(@location(0) position: vec3f, @location(1) normal: vec3f, @builtin(in
         posFromLight.z
     );
 
-    output.position = scene.cameraViewProjMatrix * model.shape[instanceIndex].modelMatrix * vec4f(position, 1.0);
-    output.fragPos = (model.shape[instanceIndex].modelMatrix * vec4f(position, 1.0)).xyz;
-    output.fragNorm = (model.shape[instanceIndex].modelMatrix * vec4f(normal, 0.0)).xyz;
-    output.roughness = model.shape[instanceIndex].roughness;
-    output.metallic = model.shape[instanceIndex].metallic;
+    output.position = scene.cameraViewProjMatrix * model.modelMatrix[instanceIndex] * vec4f(position, 1.0);
+    output.fragPos = (model.modelMatrix[instanceIndex] * vec4f(position, 1.0)).xyz;
+    output.fragNorm = (model.modelMatrix[instanceIndex] * vec4f(normal, 0.0)).xyz;
+    output.roughness = model.param0[instanceIndex].x;
+    output.metallic = model.param0[instanceIndex].y;
     return output;
 }
 

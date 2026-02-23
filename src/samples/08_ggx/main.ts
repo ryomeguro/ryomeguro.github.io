@@ -5,6 +5,7 @@ import { TextureDepthPreview } from './textureDepthPreview';
 import { mat4, quat, vec3 } from 'wgpu-matrix';
 import { GuiManager } from './GuiManager';
 import { PerformanceVisualizer } from './PerformanceVisualizer';
+import { UniformBuffer } from './Lib/UniformBuffer';
 
 import * as ShaderBall from './ShaderBall';
 import * as quad from './quad';
@@ -171,21 +172,20 @@ const init = async () => {
         usage: GPUTextureUsage.RENDER_ATTACHMENT,
     });
 
-    const matrixSize = 4 * 16; // 4x4 matrix
-
     const shaderBallColNum = 10;
     const shaderBallRowNum = 10;
-    const shaderBallModelUniformBuffer = device.createBuffer({
-        size: (matrixSize + 4 * 4) * shaderBallColNum * shaderBallRowNum,
-        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+    const shaderBallModelUBO = new UniformBuffer(device, {
+        modelMatrix: { type: 'mat4f', count: shaderBallColNum * shaderBallRowNum },
+        param0: { type: 'vec4f', count: shaderBallColNum * shaderBallRowNum },
     });
-    const quadModelUniformBuffer = device.createBuffer({
-        size: matrixSize,
-        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+    const quadModelUBO = new UniformBuffer(device, {
+        modelMatrix: { type: 'mat4f' },
     });
-    const sceneUniformBuffer = device.createBuffer({
-        size: 2 * 4 * 16 + 4 * 4 + 4 * 4,
-        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+    const sceneUBO = new UniformBuffer(device, {
+        lightViewProjMtx: { type: 'mat4f' },
+        cameraViewProjMtx: { type: 'mat4f' },
+        lightDir: { type: 'vec3f' },
+        cameraPos: { type: 'vec3f' },
     });
 
     for (let x = 0; x < shaderBallColNum; x++) {
@@ -195,28 +195,29 @@ const init = async () => {
             mat4.translate(modelMatrix, [(x - 4.5) * 0.4, -1.0, (z - 4.5) * 0.4], modelMatrix);
             mat4.scale(modelMatrix, [0.15, 0.15, 0.15], modelMatrix);
 
-            let offset = (x * shaderBallRowNum + z) * (matrixSize + 4 * 4);
-            device.queue.writeBuffer(shaderBallModelUniformBuffer, offset, modelMatrix.buffer);
-            device.queue.writeBuffer(shaderBallModelUniformBuffer, offset + matrixSize, new Float32Array([x / (shaderBallColNum - 1.0), z / (shaderBallRowNum - 1.0), 0.0, 0.0]));
+            const index = x * shaderBallRowNum + z;
+            shaderBallModelUBO.setValue('modelMatrix', modelMatrix, index);
+            shaderBallModelUBO.setValue('param0', [x / (shaderBallColNum - 1.0), z / (shaderBallRowNum - 1.0)], index);
         }
     }
+    shaderBallModelUBO.update(device);
 
     const modelBindGroupForShaderBall = device.createBindGroup({
         layout: uniformBufferBindGroupLayout,
         entries: [
-            { binding: 0, resource: { buffer: shaderBallModelUniformBuffer } },
+            { binding: 0, resource: { buffer: shaderBallModelUBO.getBuffer() } },
         ],
     });
     const modelBindGroupForQuad = device.createBindGroup({
         layout: uniformBufferBindGroupLayout,
         entries: [
-            { binding: 0, resource: { buffer: quadModelUniformBuffer } }
+            { binding: 0, resource: { buffer: quadModelUBO.getBuffer() } }
         ],
     });
     const sceneBindGroupForRender = device.createBindGroup({
         layout: shadowMapBindGroupLayout,
         entries: [
-            { binding: 0, resource: { buffer: sceneUniformBuffer } },
+            { binding: 0, resource: { buffer: sceneUBO.getBuffer() } },
             { binding: 1, resource: shadowMapTextureView },
             {
                 binding: 2, resource: device.createSampler({
@@ -229,7 +230,7 @@ const init = async () => {
     const sceneBindGroupForShadowMap = device.createBindGroup({
         layout: uniformBufferBindGroupLayout,
         entries: [
-            { binding: 0, resource: { buffer: sceneUniformBuffer } },
+            { binding: 0, resource: { buffer: sceneUBO.getBuffer() } },
         ],
     });
 
@@ -327,12 +328,14 @@ const init = async () => {
         }
 
         // バッファを書き込む
-        device.queue.writeBuffer(sceneUniformBuffer, 0, lightViewProjMatrix.buffer);
-        device.queue.writeBuffer(sceneUniformBuffer, 64, cameraViewProjMatrix.buffer);
-        device.queue.writeBuffer(sceneUniformBuffer, 128, lightDir.buffer);
-        device.queue.writeBuffer(sceneUniformBuffer, 144, (new Float32Array(cameraPos)).buffer);
+        sceneUBO.setValue('lightViewProjMtx', lightViewProjMatrix);
+        sceneUBO.setValue('cameraViewProjMtx', cameraViewProjMatrix);
+        sceneUBO.setValue('lightDir', lightDir);
+        sceneUBO.setValue('cameraPos', cameraPos);
+        sceneUBO.update(device);
 
-        device.queue.writeBuffer(quadModelUniformBuffer, 0, modelMatrixQuad.buffer);
+        quadModelUBO.setValue('modelMatrix', modelMatrixQuad);
+        quadModelUBO.update(device);
 
         const commandEncoder = device.createCommandEncoder();
         const textureView = context.getCurrentTexture().createView();
