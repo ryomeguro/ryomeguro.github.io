@@ -18,10 +18,12 @@ export function getSampleSources(sampleName: string): SourceFile[] {
     for (const path in modules) {
         if (path.startsWith(prefix)) {
             const fileName = path.substring(prefix.length);
-            sources.push({
-                name: fileName,
-                content: modules[path] as string
-            });
+            if (!fileName.startsWith('Lib/')) {
+                sources.push({
+                    name: fileName,
+                    content: modules[path] as string
+                });
+            }
         }
     }
 
