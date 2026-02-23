@@ -1,14 +1,15 @@
 import materialPhongShaderCode from './shader_phong.wgsl?raw';
 import materialGgxShaderCode from './shader_ggx_instancing.wgsl?raw';
 import shadowMapShaderCode from './shadowMap.wgsl?raw';
-import { TextureDepthPreview } from './textureDepthPreview';
+import { TextureDepthPreview } from './Lib/textureDepthPreview';
 import { mat4, quat, vec3 } from 'wgpu-matrix';
-import { GuiManager } from './GuiManager';
-import { PerformanceVisualizer } from './PerformanceVisualizer';
+import { GuiManager } from './Lib/GuiManager';
+import { PerformanceVisualizer } from './Lib/PerformanceVisualizer';
 import { UniformBuffer } from './Lib/UniformBuffer';
+import { createBindGroupLayout } from './Lib/BindGroupRayoutFactory'
 
 import * as ShaderBall from './ShaderBall';
-import * as quad from './quad';
+import * as quad from './Lib/quad';
 
 const init = async () => {
     // 初期化
@@ -38,45 +39,16 @@ const init = async () => {
     });
 
     // uniformを1つ入れるレイアウトの作成
-    const uniformBufferBindGroupLayout = device.createBindGroupLayout({
-        label: 'Uniform Buffer Bind Group Layout',
-        entries: [
-            {
-                binding: 0,
-                visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
-                buffer: {
-                    type: 'uniform',
-                },
-            },
-        ],
-    });
+    const uniformBufferBindGroupLayout = createBindGroupLayout(device, 'Uniform Buffer Bind Group Layout', [
+        { type: 'Uniform' },
+    ]);
 
     // シャドウマップに関する情報を入れるレイアウト
-    const shadowMapBindGroupLayout = device.createBindGroupLayout({
-        entries: [
-            {
-                binding: 0,
-                visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
-                buffer: {
-                    type: 'uniform',
-                },
-            },
-            {
-                binding: 1,
-                visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
-                texture: {
-                    sampleType: 'depth',
-                },
-            },
-            {
-                binding: 2,
-                visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
-                sampler: {
-                    type: 'comparison',
-                },
-            },
-        ],
-    });
+    const shadowMapBindGroupLayout = createBindGroupLayout(device, 'Shadow Map Bind Group Layout', [
+        { type: 'Uniform' },
+        { type: 'DepthTexture' },
+        { type: 'ComparisonSampler' },
+    ]);
 
     // プリミティブの設定
     // 全て同じなのでここで定義しておく
